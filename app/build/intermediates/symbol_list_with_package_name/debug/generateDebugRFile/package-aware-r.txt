@@ -1,0 +1,3 @@
+pelkidev.com.mx.emuladorgba.app
+string app_name
+style Theme_EmuladorGba
