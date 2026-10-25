@@ -211,6 +211,29 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun repeatedSound_isPublishedAgain() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { loopingDirectChannel() }
+        viewModel.onMachineTick()
+        viewModel.onMachineTick()
+        val first = viewModel.uiState.value.samples
+
+        viewModel.onMachineTick()
+
+        val second = viewModel.uiState.value.samples
+        assertTrue(first.isNotEmpty())
+        assertTrue(first !== second)
+        assertArrayEquals(first, second)
+    }
+
+    @Test
+    fun pcm16_keepsTheSignedSample() {
+        assertEquals(0, gbaPcm16(byteArrayOf()).size)
+        assertArrayEquals(byteArrayOf(0x00, 0x11), gbaPcm16(byteArrayOf(0x11)))
+        assertArrayEquals(byteArrayOf(0x00, 0x00), gbaPcm16(byteArrayOf(0x00)))
+    }
+
+    @Test
     fun laterAdvanceWithoutWrites_publishesSilence() {
         val viewModel = EmuladorStartViewModel()
         viewModel.onFileChosen("juego.gba") { directChannelProgram() }
@@ -258,6 +281,15 @@ class EmuladorStartViewModelTest {
         clear.isAccessible = true
         clear.invoke(this)
     }
+
+    private fun loopingDirectChannel(): ByteArray = words(
+        0xE59F200C.toInt(),
+        0xE3A01404.toInt(),
+        0xE28110A0.toInt(),
+        0xE5812000.toInt(),
+        0xEAFFFFFD.toInt(),
+        0x44332211,
+    )
 
     private fun directChannelProgram(): ByteArray = words(
         0xE59F2008.toInt(),

@@ -1,7 +1,12 @@
 package pelkidev.com.mx.emuladorgba.presentation
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioTrack
 import android.net.Uri
+import android.os.Handler
+import android.os.HandlerThread
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,7 +22,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,6 +43,7 @@ fun EmuladorStartScreen(
     viewModel: EmuladorStartViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    GbaSpeaker(uiState.samples)
     val context = LocalContext.current
     val pickGbaFile = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
@@ -99,6 +108,108 @@ fun EmuladorStartScreen(
         ) {
             Text("Atrás")
         }
+    }
+}
+
+@Composable
+private fun GbaSpeaker(samples: ByteArray) {
+    val player = remember { GbaPcmPlayer() }
+    DisposableEffect(player) {
+        onDispose { player.release() }
+    }
+    LaunchedEffect(samples) {
+        player.submit(samples)
+    }
+}
+
+internal fun gbaPcm16(samples: ByteArray): ByteArray {
+    val pcm = ByteArray(samples.size * 2)
+    samples.forEachIndexed { index, sample ->
+        val wide = sample.toInt() shl 8
+        pcm[index * 2] = wide.toByte()
+        pcm[index * 2 + 1] = (wide ushr 8).toByte()
+    }
+    return pcm
+}
+
+private class GbaPcmPlayer {
+    private var thread: HandlerThread? = null
+    private var handler: Handler? = null
+    private var track: AudioTrack? = null
+
+    fun submit(samples: ByteArray) {
+        if (samples.isEmpty()) {
+            handler?.post { pause() } ?: return
+            return
+        }
+        val copy = samples.copyOf()
+        ensureHandler().post { play(copy) }
+    }
+
+    fun release() {
+        val handler = handler ?: return
+        val thread = thread ?: return
+        handler.post {
+            track?.release()
+            track = null
+        }
+        thread.quitSafely()
+    }
+
+    private fun ensureHandler(): Handler {
+        handler?.let { return it }
+        val thread = HandlerThread("gba-pcm").also { it.start() }
+        return Handler(thread.looper).also {
+            this.thread = thread
+            handler = it
+        }
+    }
+
+    private fun play(samples: ByteArray) {
+        val pcm = gbaPcm16(samples)
+        val track = ensureTrack()
+        if (track.state != AudioTrack.STATE_INITIALIZED) return
+        track.play()
+        track.write(pcm, 0, pcm.size)
+    }
+
+    private fun pause() {
+        val track = track ?: return
+        if (track.playState != AudioTrack.PLAYSTATE_PLAYING) return
+        track.pause()
+        track.flush()
+    }
+
+    private fun ensureTrack(): AudioTrack {
+        track?.let { return it }
+        val min = AudioTrack.getMinBufferSize(
+            SAMPLE_RATE,
+            AudioFormat.CHANNEL_OUT_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+        )
+        val size = if (min > 0) min else 1024
+        return AudioTrack.Builder()
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build(),
+            )
+            .setAudioFormat(
+                AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setSampleRate(SAMPLE_RATE)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .build(),
+            )
+            .setTransferMode(AudioTrack.MODE_STREAM)
+            .setBufferSizeInBytes(size)
+            .build()
+            .also { track = it }
+    }
+
+    private companion object {
+        const val SAMPLE_RATE = 22050
     }
 }
 

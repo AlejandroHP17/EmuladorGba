@@ -64,7 +64,7 @@ class EmuladorStartViewModel : ViewModel() {
             val sameFrame = current != null && current.pixels.contentEquals(next.pixels)
             val sameSound = state.samples.contentEquals(heard)
             when {
-                sameFrame && sameSound -> state
+                sameFrame && sameSound && heard.isEmpty() -> state
                 sameFrame -> state.copy(samples = heard)
                 else -> state.copy(frame = next, samples = heard)
             }
