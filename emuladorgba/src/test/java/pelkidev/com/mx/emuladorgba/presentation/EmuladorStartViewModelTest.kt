@@ -25,9 +25,10 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
-    fun otherExtension_keepsTheGameAlreadyLoaded() {
+    fun otherExtension_keepsTheTitleAlreadyShown() {
         val viewModel = EmuladorStartViewModel()
-        val rom = byteArrayOf(1, 2, 3)
+        val rom = ByteArray(0xA0 + 12)
+        "ZELDA       ".toByteArray(Charsets.US_ASCII).copyInto(rom, destinationOffset = 0xA0)
         viewModel.onFileChosen("juego.gba") { rom }
         val frame = viewModel.uiState.value.frame
 
@@ -36,6 +37,7 @@ class EmuladorStartViewModelTest {
         assertEquals("juego.gba", viewModel.uiState.value.loadedFileName)
         assertArrayEquals(rom, viewModel.loadedRom)
         assertTrue(viewModel.uiState.value.frame === frame)
+        assertArrayEquals(romFrame(rom, "juego.gba").pixels, viewModel.uiState.value.frame!!.pixels)
         assertTrue(viewModel.uiState.value.showInvalidFileMessage)
     }
 

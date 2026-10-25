@@ -30,6 +30,13 @@ class RomTitleTest {
     }
 
     @Test
+    fun trailingNulls_areNotPartOfTheTitle() {
+        val rom = headerWithTitle("MARIO KART\u0000\u0000")
+
+        assertEquals("MARIO KART", romTitle(rom))
+    }
+
+    @Test
     fun emptyOrUnreadableTitle_hasNoTitle() {
         assertNull(romTitle(headerWithTitle("            ")))
         assertNull(romTitle(headerWithTitle("MARIO\u0000KART  ")))
