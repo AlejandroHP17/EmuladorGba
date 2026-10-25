@@ -16,11 +16,16 @@ class EmuladorStartViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(EmuladorStartUiState())
     val uiState: StateFlow<EmuladorStartUiState> = _uiState.asStateFlow()
 
-    fun onFileNameChosen(fileName: String) {
+    var loadedRom: ByteArray? = null
+        private set
+
+    fun onFileChosen(fileName: String, readBytes: () -> ByteArray?) {
         if (!isGbaFileName(fileName)) {
             _uiState.update { it.copy(showInvalidFileMessage = true) }
             return
         }
+        val bytes = readBytes() ?: return
+        loadedRom = bytes
         _uiState.update {
             it.copy(
                 loadedFileName = fileName.trim(),
