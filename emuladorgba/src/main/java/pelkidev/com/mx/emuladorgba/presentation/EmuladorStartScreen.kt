@@ -49,6 +49,7 @@ fun EmuladorStartScreen(
     viewModel: EmuladorStartViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val frame = viewModel.frame.collectAsStateWithLifecycle()
     GbaSpeaker(uiState.samples)
     val context = LocalContext.current
     val pickGbaFile = rememberLauncherForActivityResult(
@@ -95,9 +96,9 @@ fun EmuladorStartScreen(
                     modifier = Modifier.padding(top = 16.dp),
                 )
             }
-            uiState.frame?.let { frame ->
+            if (uiState.loadedFileName != null) {
                 GbaScreen(
-                    frame = frame,
+                    frame = { frame.value },
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .fillMaxWidth()

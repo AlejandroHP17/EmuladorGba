@@ -23,7 +23,7 @@ class EmuladorStartViewModelTest {
 
         assertNull(viewModel.uiState.value.loadedFileName)
         assertNull(viewModel.loadedRom)
-        assertNull(viewModel.uiState.value.frame)
+        assertNull(viewModel.frame.value)
         assertTrue(viewModel.uiState.value.showInvalidFileMessage)
     }
 
@@ -33,14 +33,14 @@ class EmuladorStartViewModelTest {
         val rom = ByteArray(0xA0 + 12)
         "ZELDA       ".toByteArray(Charsets.US_ASCII).copyInto(rom, destinationOffset = 0xA0)
         viewModel.onFileChosen("juego.gba") { rom }
-        val frame = viewModel.uiState.value.frame
+        val frame = viewModel.frame.value
 
         viewModel.onFileChosen("notas.txt") { byteArrayOf(9) }
 
         assertEquals("juego.gba", viewModel.uiState.value.loadedFileName)
         assertArrayEquals(rom, viewModel.loadedRom)
-        assertTrue(viewModel.uiState.value.frame === frame)
-        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.uiState.value.frame!!.pixels)
+        assertTrue(viewModel.frame.value === frame)
+        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.frame.value!!.pixels)
         assertTrue(viewModel.uiState.value.showInvalidFileMessage)
     }
 
@@ -55,7 +55,7 @@ class EmuladorStartViewModelTest {
         assertArrayEquals(rom, viewModel.loadedRom)
         assertEquals(
             GbaFrame.WIDTH * GbaFrame.HEIGHT,
-            viewModel.uiState.value.frame!!.pixels.size,
+            viewModel.frame.value!!.pixels.size,
         )
         assertFalse(viewModel.uiState.value.showInvalidFileMessage)
     }
@@ -68,7 +68,7 @@ class EmuladorStartViewModelTest {
 
         viewModel.onFileChosen("  otro.gba  ") { rom }
 
-        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.uiState.value.frame!!.pixels)
+        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.frame.value!!.pixels)
     }
 
     @Test
@@ -76,33 +76,33 @@ class EmuladorStartViewModelTest {
         val viewModel = newViewModel()
         val rom = byteArrayOf(7)
         viewModel.onFileChosen("juego.gba") { rom }
-        val frame = viewModel.uiState.value.frame
+        val frame = viewModel.frame.value
 
         viewModel.onFileChosen("otro.gba") { null }
 
         assertEquals("juego.gba", viewModel.uiState.value.loadedFileName)
         assertArrayEquals(rom, viewModel.loadedRom)
-        assertTrue(viewModel.uiState.value.frame === frame)
+        assertTrue(viewModel.frame.value === frame)
     }
 
     @Test
     fun withoutAGba_thereIsNoFrame() {
         val viewModel = newViewModel()
 
-        assertNull(viewModel.uiState.value.frame)
+        assertNull(viewModel.frame.value)
     }
 
     @Test
     fun anotherGba_replacesTheFrame() {
         val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
-        val first = viewModel.uiState.value.frame
+        val first = viewModel.frame.value
 
         viewModel.onFileChosen("otro.gba") { byteArrayOf(2) }
 
         assertNotNull(first)
-        assertNotNull(viewModel.uiState.value.frame)
-        assertTrue(viewModel.uiState.value.frame !== first)
+        assertNotNull(viewModel.frame.value)
+        assertTrue(viewModel.frame.value !== first)
     }
 
     @Test
@@ -112,8 +112,8 @@ class EmuladorStartViewModelTest {
 
         viewModel.onFileChosen("juego.gba") { rom }
 
-        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.uiState.value.frame!!.pixels)
-        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(0, 0))
+        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.frame.value!!.pixels)
+        assertEquals(BLACK, viewModel.frame.value!!.pixel(0, 0))
     }
 
     @Test
@@ -131,7 +131,7 @@ class EmuladorStartViewModelTest {
 
         viewModel.onMachineTick()
 
-        val frame = viewModel.uiState.value.frame!!
+        val frame = viewModel.frame.value!!
         assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, frame.pixels.size)
         assertEquals(RED, frame.pixel(0, 0))
         assertEquals(RED, frame.pixel(1, 0))
@@ -154,16 +154,16 @@ class EmuladorStartViewModelTest {
                 0xE1C420B0.toInt(),
             )
         }
-        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(0, 0))
+        assertEquals(BLACK, viewModel.frame.value!!.pixel(0, 0))
 
         viewModel.onMachineTick()
 
-        val shown = viewModel.uiState.value.frame!!
+        val shown = viewModel.frame.value!!
         assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, shown.pixels.size)
         assertEquals(RED, shown.pixel(0, 0))
         assertEquals(BLACK, shown.pixel(1, 0))
         viewModel.onMachineTick()
-        assertTrue(viewModel.uiState.value.frame === shown)
+        assertTrue(viewModel.frame.value === shown)
     }
 
     @Test
@@ -173,10 +173,10 @@ class EmuladorStartViewModelTest {
 
         viewModel.onMachineTick()
 
-        assertEquals(RED, viewModel.uiState.value.frame!!.pixel(0, 0))
-        val painted = viewModel.uiState.value.frame
+        assertEquals(RED, viewModel.frame.value!!.pixel(0, 0))
+        val painted = viewModel.frame.value
         viewModel.onMachineTick()
-        assertTrue(viewModel.uiState.value.frame === painted)
+        assertTrue(viewModel.frame.value === painted)
     }
 
     @Test
@@ -188,35 +188,35 @@ class EmuladorStartViewModelTest {
         Thread.sleep(350)
         viewModel.onMachineTick()
 
-        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(0, 0))
+        assertEquals(BLACK, viewModel.frame.value!!.pixel(0, 0))
     }
 
     @Test
     fun object_replacesTheShownFrame() {
         val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { objectOverBackground() }
-        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(8, 0))
+        assertEquals(BLACK, viewModel.frame.value!!.pixel(8, 0))
 
         viewModel.onMachineTick()
 
-        val shown = viewModel.uiState.value.frame!!
+        val shown = viewModel.frame.value!!
         assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, shown.pixels.size)
         assertEquals(RED, shown.pixel(0, 0))
         assertEquals(GREEN, shown.pixel(8, 0))
         viewModel.onMachineTick()
-        assertTrue(viewModel.uiState.value.frame === shown)
+        assertTrue(viewModel.frame.value === shown)
     }
 
     @Test
     fun waiting_replacesThePictureWithoutAControl() {
         val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { movingPicture() }
-        val initial = viewModel.uiState.value.frame!!
+        val initial = viewModel.frame.value!!
 
         viewModel.onMachineTick()
-        val first = viewModel.uiState.value.frame!!
+        val first = viewModel.frame.value!!
         viewModel.onMachineTick()
-        val second = viewModel.uiState.value.frame!!
+        val second = viewModel.frame.value!!
 
         assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, second.pixels.size)
         assertFalse(initial.pixels.contentEquals(first.pixels))
@@ -229,12 +229,12 @@ class EmuladorStartViewModelTest {
         viewModel.onFileChosen("juego.gba") { movingPicture() }
         viewModel.onMachineTick()
         viewModel.onMachineTick()
-        val moving = viewModel.uiState.value.frame!!
+        val moving = viewModel.frame.value!!
 
         viewModel.onFileChosen("otro.gba") { byteArrayOf(1) }
         viewModel.onMachineTick()
 
-        val shown = viewModel.uiState.value.frame!!
+        val shown = viewModel.frame.value!!
         assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, shown.pixels.size)
         assertFalse(moving.pixels.contentEquals(shown.pixels))
     }
@@ -244,12 +244,12 @@ class EmuladorStartViewModelTest {
         val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { movingPicture() }
         viewModel.onMachineTick()
-        val moving = viewModel.uiState.value.frame
+        val moving = viewModel.frame.value
 
         viewModel.clear()
         viewModel.onMachineTick()
 
-        assertTrue(viewModel.uiState.value.frame === moving)
+        assertTrue(viewModel.frame.value === moving)
     }
 
     @Test
@@ -260,8 +260,8 @@ class EmuladorStartViewModelTest {
 
         viewModel.onFileChosen("otro.gba") { byteArrayOf(1) }
 
-        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(8, 0))
-        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(0, 0))
+        assertEquals(BLACK, viewModel.frame.value!!.pixel(8, 0))
+        assertEquals(BLACK, viewModel.frame.value!!.pixel(0, 0))
     }
 
     @Test
@@ -272,7 +272,7 @@ class EmuladorStartViewModelTest {
         viewModel.clear()
         viewModel.onMachineTick()
 
-        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(8, 0))
+        assertEquals(BLACK, viewModel.frame.value!!.pixel(8, 0))
     }
 
     @Test
@@ -383,7 +383,7 @@ class EmuladorStartViewModelTest {
 
         viewModel.onMachineTick()
 
-        assertEquals(pixelAfter(setOf(GbaButton.A)), viewModel.uiState.value.frame!!.pixel(0, 0))
+        assertEquals(pixelAfter(setOf(GbaButton.A)), viewModel.frame.value!!.pixel(0, 0))
     }
 
     @Test
@@ -397,7 +397,7 @@ class EmuladorStartViewModelTest {
 
         assertEquals(
             pixelAfter(setOf(GbaButton.A, GbaButton.B)),
-            viewModel.uiState.value.frame!!.pixel(0, 0),
+            viewModel.frame.value!!.pixel(0, 0),
         )
     }
 
@@ -411,7 +411,7 @@ class EmuladorStartViewModelTest {
         viewModel.onControlChanged(GbaButton.A, false)
         viewModel.onMachineTick()
 
-        assertEquals(pixelAfter(emptySet()), viewModel.uiState.value.frame!!.pixel(0, 0))
+        assertEquals(pixelAfter(emptySet()), viewModel.frame.value!!.pixel(0, 0))
     }
 
     @Test
@@ -420,7 +420,7 @@ class EmuladorStartViewModelTest {
 
         viewModel.onControlChanged(GbaButton.A, true)
 
-        assertNull(viewModel.uiState.value.frame)
+        assertNull(viewModel.frame.value)
     }
 
     @Test
@@ -432,7 +432,7 @@ class EmuladorStartViewModelTest {
         viewModel.onMachineTick()
 
         assertNull(viewModel.loadedRom)
-        assertNull(viewModel.uiState.value.frame)
+        assertNull(viewModel.frame.value)
     }
 
     @Test
@@ -447,14 +447,14 @@ class EmuladorStartViewModelTest {
         )
         val rom = byteArrayOf(7)
         viewModel.onFileChosen("juego.gba") { rom }
-        val frame = viewModel.uiState.value.frame
+        val frame = viewModel.frame.value
 
         failing = true
         viewModel.onFileChosen("roto.gba") { byteArrayOf(1) }
 
         assertEquals("juego.gba", viewModel.uiState.value.loadedFileName)
         assertArrayEquals(rom, viewModel.loadedRom)
-        assertTrue(viewModel.uiState.value.frame === frame)
+        assertTrue(viewModel.frame.value === frame)
     }
 
     @Test

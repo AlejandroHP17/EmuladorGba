@@ -22,7 +22,6 @@ import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
 data class EmuladorStartUiState(
     val loadedFileName: String? = null,
     val showInvalidFileMessage: Boolean = false,
-    val frame: GbaFrame? = null,
     val samples: ByteArray = byteArrayOf(),
 )
 
@@ -32,6 +31,9 @@ class EmuladorStartViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(EmuladorStartUiState())
     val uiState: StateFlow<EmuladorStartUiState> = _uiState.asStateFlow()
+
+    private val _frame = MutableStateFlow<GbaFrame?>(null)
+    val frame: StateFlow<GbaFrame?> = _frame.asStateFlow()
 
     var loadedRom: ByteArray? = null
         private set
@@ -62,11 +64,11 @@ class EmuladorStartViewModel(
         }
         loadedRom = bytes
         heldButtons = emptySet()
+        _frame.value = next.frame()
         _uiState.update {
             it.copy(
                 loadedFileName = fileName.trim(),
                 showInvalidFileMessage = false,
-                frame = next.frame(),
                 samples = byteArrayOf(),
             )
         }
@@ -92,15 +94,10 @@ class EmuladorStartViewModel(
             heard = running.samples()
         }
         if (machine !== running) return
+        val current = _frame.value
+        if (current == null || !current.pixels.contentEquals(next.pixels)) _frame.value = next
         _uiState.update { state ->
-            val current = state.frame
-            val sameFrame = current != null && current.pixels.contentEquals(next.pixels)
-            val sameSound = state.samples.contentEquals(heard)
-            when {
-                sameFrame && sameSound && heard.isEmpty() -> state
-                sameFrame -> state.copy(samples = heard)
-                else -> state.copy(frame = next, samples = heard)
-            }
+            if (heard.isEmpty() && state.samples.isEmpty()) state else state.copy(samples = heard)
         }
     }
 
