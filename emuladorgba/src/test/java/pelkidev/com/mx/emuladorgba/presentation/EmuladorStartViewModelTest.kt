@@ -1,5 +1,6 @@
 package pelkidev.com.mx.emuladorgba.presentation
 
+import androidx.lifecycle.ViewModel
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -127,6 +128,18 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun leaving_stopsTheAdvance() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { paintRedAtOrigin() }
+
+        viewModel.clear()
+        Thread.sleep(350)
+        viewModel.onMachineTick()
+
+        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(0, 0))
+    }
+
+    @Test
     fun withoutARom_theMachineDoesNotRun() {
         val viewModel = EmuladorStartViewModel()
 
@@ -136,6 +149,12 @@ class EmuladorStartViewModelTest {
 
         assertNull(viewModel.loadedRom)
         assertNull(viewModel.uiState.value.frame)
+    }
+
+    private fun ViewModel.clear() {
+        val clear = ViewModel::class.java.getDeclaredMethod("onCleared")
+        clear.isAccessible = true
+        clear.invoke(this)
     }
 
     private fun paintRedAtOrigin(): ByteArray = words(
