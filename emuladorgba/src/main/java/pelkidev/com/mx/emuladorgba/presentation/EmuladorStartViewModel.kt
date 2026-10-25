@@ -12,9 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
+import pelkidev.com.mx.emuladorgba.domain.GbaMachine
 import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
-import pelkidev.com.mx.emuladorgba.domain.RomFrames
-import pelkidev.com.mx.emuladorgba.domain.romFrames
 
 data class EmuladorStartUiState(
     val loadedFileName: String? = null,
@@ -29,8 +28,7 @@ class EmuladorStartViewModel : ViewModel() {
     var loadedRom: ByteArray? = null
         private set
 
-    private var show: RomFrames? = null
-    private var step = 0
+    private var machine: GbaMachine? = null
     private var ticker: Job? = null
     private val tickerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -41,31 +39,38 @@ class EmuladorStartViewModel : ViewModel() {
         }
         val bytes = readBytes() ?: return
         loadedRom = bytes
-        val frames = romFrames(bytes, fileName.trim())
-        show = frames
-        step = 0
+        val next = GbaMachine(bytes)
+        machine = next
         restartTicker()
         _uiState.update {
             it.copy(
                 loadedFileName = fileName.trim(),
                 showInvalidFileMessage = false,
-                frame = frames.frameAt(0),
+                frame = next.frame(),
             )
         }
     }
 
-    fun onSecondElapsed() {
-        val frames = show ?: return
-        step += 1
-        _uiState.update { it.copy(frame = frames.frameAt(step)) }
+    fun onMachineTick() {
+        val running = machine ?: return
+        running.step()
+        val next = running.frame()
+        _uiState.update { state ->
+            val current = state.frame
+            if (current != null && current.pixels.contentEquals(next.pixels)) {
+                state
+            } else {
+                state.copy(frame = next)
+            }
+        }
     }
 
     private fun restartTicker() {
         ticker?.cancel()
         ticker = tickerScope.launch {
             while (true) {
-                delay(1_000)
-                onSecondElapsed()
+                delay(TICK_MILLIS)
+                onMachineTick()
             }
         }
     }
@@ -73,5 +78,9 @@ class EmuladorStartViewModel : ViewModel() {
     override fun onCleared() {
         ticker?.cancel()
         super.onCleared()
+    }
+
+    private companion object {
+        const val TICK_MILLIS = 200L
     }
 }

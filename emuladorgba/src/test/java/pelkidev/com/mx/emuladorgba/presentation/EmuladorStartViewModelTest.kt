@@ -8,7 +8,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
-import pelkidev.com.mx.emuladorgba.domain.romFrame
+import pelkidev.com.mx.emuladorgba.domain.GbaMachine
 
 class EmuladorStartViewModelTest {
 
@@ -37,7 +37,7 @@ class EmuladorStartViewModelTest {
         assertEquals("juego.gba", viewModel.uiState.value.loadedFileName)
         assertArrayEquals(rom, viewModel.loadedRom)
         assertTrue(viewModel.uiState.value.frame === frame)
-        assertArrayEquals(romFrame(rom, "juego.gba").pixels, viewModel.uiState.value.frame!!.pixels)
+        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.uiState.value.frame!!.pixels)
         assertTrue(viewModel.uiState.value.showInvalidFileMessage)
     }
 
@@ -65,7 +65,7 @@ class EmuladorStartViewModelTest {
 
         viewModel.onFileChosen("  otro.gba  ") { rom }
 
-        assertArrayEquals(romFrame(rom, "otro.gba").pixels, viewModel.uiState.value.frame!!.pixels)
+        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.uiState.value.frame!!.pixels)
     }
 
     @Test
@@ -103,28 +103,57 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
-    fun whileARomIsLoaded_eachSecondSwitchesTheFrame() {
+    fun loadedGba_showsTheMachineFrame() {
         val viewModel = EmuladorStartViewModel()
-        val rom = ByteArray(0xA0 + 12)
-        rom[0x04] = 0x80.toByte()
-        "TETRIS      ".toByteArray(Charsets.US_ASCII).copyInto(rom, destinationOffset = 0xA0)
+        val rom = paintRedAtOrigin()
+
         viewModel.onFileChosen("juego.gba") { rom }
-        val title = viewModel.uiState.value.frame!!.pixels
 
-        viewModel.onSecondElapsed()
-        val graphic = viewModel.uiState.value.frame!!.pixels
-
-        assertFalse(title.contentEquals(graphic))
-        viewModel.onSecondElapsed()
-        assertArrayEquals(title, viewModel.uiState.value.frame!!.pixels)
+        assertArrayEquals(GbaMachine(rom).frame().pixels, viewModel.uiState.value.frame!!.pixels)
+        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(0, 0))
     }
 
     @Test
-    fun withoutARom_aSecondDoesNotCreateAFrame() {
+    fun whenTheMachinePaints_theShownFrameIsReplaced() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { paintRedAtOrigin() }
+
+        viewModel.onMachineTick()
+
+        assertEquals(RED, viewModel.uiState.value.frame!!.pixel(0, 0))
+        val painted = viewModel.uiState.value.frame
+        viewModel.onMachineTick()
+        assertTrue(viewModel.uiState.value.frame === painted)
+    }
+
+    @Test
+    fun withoutARom_aTickDoesNotCreateAFrame() {
         val viewModel = EmuladorStartViewModel()
 
-        viewModel.onSecondElapsed()
+        viewModel.onMachineTick()
 
         assertNull(viewModel.uiState.value.frame)
+    }
+
+    private fun paintRedAtOrigin(): ByteArray = words(
+        0xE3A01406.toInt(),
+        0xE3A0201F.toInt(),
+        0xE1C120B0.toInt(),
+    )
+
+    private fun words(vararg instructions: Int): ByteArray {
+        val bytes = ByteArray(instructions.size * 4)
+        instructions.forEachIndexed { index, word ->
+            bytes[index * 4] = word.toByte()
+            bytes[index * 4 + 1] = (word ushr 8).toByte()
+            bytes[index * 4 + 2] = (word ushr 16).toByte()
+            bytes[index * 4 + 3] = (word ushr 24).toByte()
+        }
+        return bytes
+    }
+
+    private companion object {
+        const val RED = 0xFFFF0000.toInt()
+        const val BLACK = 0xFF000000.toInt()
     }
 }
