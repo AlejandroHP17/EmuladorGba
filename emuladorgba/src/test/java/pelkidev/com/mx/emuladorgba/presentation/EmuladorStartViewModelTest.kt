@@ -127,11 +127,14 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
-    fun withoutARom_aTickDoesNotCreateAFrame() {
+    fun withoutARom_theMachineDoesNotRun() {
         val viewModel = EmuladorStartViewModel()
 
+        repeat(3) { viewModel.onMachineTick() }
+        viewModel.onFileChosen("notas.txt") { byteArrayOf(1) }
         viewModel.onMachineTick()
 
+        assertNull(viewModel.loadedRom)
         assertNull(viewModel.uiState.value.frame)
     }
 
