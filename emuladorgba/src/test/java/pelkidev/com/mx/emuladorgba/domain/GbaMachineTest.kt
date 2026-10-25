@@ -78,6 +78,39 @@ class GbaMachineTest {
     }
 
     @Test
+    fun imageWrite_appearsAtThatPixelOfTheFrame() {
+        val machine = GbaMachine(
+            words(
+                0xE59F1004.toInt(),
+                0xE3A0201F.toInt(),
+                0xE1C120B0.toInt(),
+                0x06000000 + (20 * GbaFrame.WIDTH + 10) * 2,
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, machine.frame().pixels.size)
+        assertEquals(RED, machine.frame().pixel(10, 20))
+        assertEquals(BLACK, machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun writeOutsideTheImage_staysBlack() {
+        val machine = GbaMachine(
+            words(
+                0xE3A01402.toInt(),
+                0xE3A0201F.toInt(),
+                0xE1C120B0.toInt(),
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(BLACK, machine.frame().pixel(0, 0))
+    }
+
+    @Test
     fun emptyRom_staysBlank() {
         val machine = GbaMachine(ByteArray(0))
 
