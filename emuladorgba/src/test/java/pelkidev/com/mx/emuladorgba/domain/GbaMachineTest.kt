@@ -28,6 +28,56 @@ class GbaMachineTest {
     }
 
     @Test
+    fun jump_thenPaintsAKnownPixel() {
+        val machine = GbaMachine(
+            words(
+                0xEA000000.toInt(),
+                0xFFFFFFFF.toInt(),
+                0xE3A01406.toInt(),
+                0xE3A0201F.toInt(),
+                0xE1C120B0.toInt(),
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+        assertEquals(BLACK, machine.frame().pixel(1, 0))
+    }
+
+    @Test
+    fun load_paintsTheValueReadFromTheProgram() {
+        val machine = GbaMachine(
+            words(
+                0xE59F2004.toInt(),
+                0xE3A01406.toInt(),
+                0xE1C120B0.toInt(),
+                31,
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun thumbStore_paintsAKnownPixel() {
+        val arm = words(
+            0xE3A00000.toInt(),
+            0xE3A01406.toInt(),
+            0xE3A0201F.toInt(),
+            0xE28F3001.toInt(),
+            0xE12FFF13.toInt(),
+        )
+        val machine = GbaMachine(arm + byteArrayOf(0x0A, 0x52))
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+    }
+
+    @Test
     fun emptyRom_staysBlank() {
         val machine = GbaMachine(ByteArray(0))
 
