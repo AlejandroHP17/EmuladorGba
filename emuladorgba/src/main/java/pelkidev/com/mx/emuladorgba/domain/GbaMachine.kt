@@ -6,6 +6,8 @@ private const val EWRAM_BASE = 0x02000000
 private const val IWRAM_BASE = 0x03000000
 private const val PALETTE_BASE = 0x05000000
 private const val VRAM_BASE = 0x06000000
+private const val OAM_BASE = 0x07000000
+private const val OBJ_TILES = 0x06010000
 private const val ROM_BASE = 0x08000000
 private const val INSTRUCTIONS_PER_STEP = 50_000
 private const val BLACK = 0xFF000000.toInt()
@@ -15,8 +17,9 @@ class GbaMachine(private val rom: ByteArray) {
     private val ewram = ByteArray(256 * 1024)
     private val iwram = ByteArray(32 * 1024)
     private val io = ByteArray(0x400)
-    private val palette = ByteArray(0x200)
+    private val palette = ByteArray(0x400)
     private val vram = ByteArray(96 * 1024)
+    private val oam = ByteArray(0x400)
     private var pc = ROM_BASE
     private var thumb = false
     private var scanline = 0
@@ -54,11 +57,13 @@ class GbaMachine(private val rom: ByteArray) {
     fun frame(): GbaFrame {
         val display = readHalf(IO_BASE)
         val enabled = (display ushr 8) and 0xF
-        if ((display and 7) != 0 || enabled == 0) return photoFrame()
+        val objects = display and 0x1000 != 0
+        if ((display and 7) != 0 || (enabled == 0 && !objects)) return photoFrame()
         val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT) { rgb555(readHalf(PALETTE_BASE)) }
         (0..3).filter { (enabled ushr it) and 1 == 1 }
             .sortedWith(compareByDescending<Int> { readHalf(0x04000008 + it * 2) and 3 }.thenByDescending { it })
             .forEach { paintBackground(it, pixels) }
+        if (objects) paintObjects(display and 0x40 != 0, pixels)
         return GbaFrame(pixels)
     }
 
@@ -124,6 +129,98 @@ class GbaMachine(private val rom: ByteArray) {
             PALETTE_BASE + (((entry ushr 12) and 0xF) * 16 + index) * 2
         }
         return rgb555(readHalf(colorAddress))
+    }
+
+    private fun paintObjects(oneDimensional: Boolean, pixels: IntArray) {
+        (0 until 128).sortedWith(
+            compareByDescending<Int> { (readHalf(OAM_BASE + it * 8 + 4) ushr 10) and 3 }
+                .thenByDescending { it },
+        ).forEach { paintObject(it, oneDimensional, pixels) }
+    }
+
+    private fun paintObject(index: Int, oneDimensional: Boolean, pixels: IntArray) {
+        val base = OAM_BASE + index * 8
+        val attr0 = readHalf(base)
+        val attr1 = readHalf(base + 2)
+        val attr2 = readHalf(base + 4)
+        if (attr0 and 0x300 != 0 || (attr0 ushr 10) and 3 != 0) return
+        val shape = (attr0 ushr 14) and 3
+        if (shape == 3) return
+        val size = (attr1 ushr 14) and 3
+        val (width, height) = objectSize(shape, size)
+        val eightBit = attr0 and 0x2000 != 0
+        val y = attr0 and 0xFF
+        val x = attr1 and 0x1FF
+        val hFlip = attr1 and 0x1000 != 0
+        val vFlip = attr1 and 0x2000 != 0
+        val tile = attr2 and 0x3FF
+        val paletteIndex = (attr2 ushr 12) and 0xF
+        for (row in 0 until height) {
+            val screenY = (y + row) and 0xFF
+            if (screenY >= GbaFrame.HEIGHT) continue
+            for (col in 0 until width) {
+                val screenX = (x + col) and 0x1FF
+                if (screenX >= GbaFrame.WIDTH) continue
+                val sourceX = if (hFlip) width - 1 - col else col
+                val sourceY = if (vFlip) height - 1 - row else row
+                val color = objectColor(
+                    eightBit,
+                    oneDimensional,
+                    tile,
+                    paletteIndex,
+                    width,
+                    sourceX,
+                    sourceY,
+                ) ?: continue
+                pixels[screenY * GbaFrame.WIDTH + screenX] = color
+            }
+        }
+    }
+
+    private fun objectColor(
+        eightBit: Boolean,
+        oneDimensional: Boolean,
+        tile: Int,
+        paletteIndex: Int,
+        width: Int,
+        sourceX: Int,
+        sourceY: Int,
+    ): Int? {
+        val tileColumn = sourceX ushr 3
+        val tileRow = sourceY ushr 3
+        val span = if (eightBit) 2 else 1
+        val number = if (oneDimensional) {
+            tile + (tileRow * (width ushr 3) + tileColumn) * span
+        } else if (eightBit) {
+            tile + tileRow * 16 + tileColumn * 2
+        } else {
+            tile + tileRow * 32 + tileColumn
+        }
+        val pixelX = sourceX and 7
+        val pixelY = sourceY and 7
+        val index = if (eightBit) {
+            readByte(OBJ_TILES + (number and 0x3FE) * 32 + pixelY * 8 + pixelX)
+        } else {
+            val packed = readByte(OBJ_TILES + (number and 0x3FF) * 32 + pixelY * 4 + (pixelX ushr 1))
+            if (pixelX and 1 == 0) packed and 0xF else (packed ushr 4) and 0xF
+        }
+        if (index == 0) return null
+        val colorAddress = if (eightBit) {
+            0x05000200 + index * 2
+        } else {
+            0x05000200 + (paletteIndex * 16 + index) * 2
+        }
+        return rgb555(readHalf(colorAddress))
+    }
+
+    private fun objectSize(shape: Int, size: Int): Pair<Int, Int> {
+        val sizes = arrayOf(
+            intArrayOf(8, 8, 16, 16, 32, 32, 64, 64),
+            intArrayOf(16, 8, 32, 8, 32, 16, 64, 32),
+            intArrayOf(8, 16, 8, 32, 16, 32, 32, 64),
+        )
+        val pair = sizes[shape]
+        return pair[size * 2] to pair[size * 2 + 1]
     }
 
     private fun executeOne() {
@@ -625,6 +722,7 @@ class GbaMachine(private val rom: ByteArray) {
         address in IWRAM_BASE until IWRAM_BASE + iwram.size -> Memory(IWRAM_BASE, iwram, writable = true)
         address in PALETTE_BASE until PALETTE_BASE + palette.size -> Memory(PALETTE_BASE, palette, writable = true)
         address in VRAM_BASE until VRAM_BASE + vram.size -> Memory(VRAM_BASE, vram, writable = true)
+        address in OAM_BASE until OAM_BASE + oam.size -> Memory(OAM_BASE, oam, writable = true)
         address in ROM_BASE until ROM_BASE + rom.size -> Memory(ROM_BASE, rom, writable = false)
         else -> null
     }
