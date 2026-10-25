@@ -10,3 +10,6 @@ fun romTitle(rom: ByteArray): String? {
     val title = raw.toString(Charsets.US_ASCII).trimEnd(' ')
     return title.ifEmpty { null }
 }
+
+fun romFrame(rom: ByteArray, fileName: String): GbaFrame =
+    titleFrame(romTitle(rom) ?: fileName)

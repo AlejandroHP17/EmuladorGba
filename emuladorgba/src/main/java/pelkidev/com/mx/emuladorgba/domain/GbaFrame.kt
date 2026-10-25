@@ -79,11 +79,14 @@ private fun titleWidth(title: String, scale: Int): Int {
     return title.length * GLYPH_WIDTH * scale + (title.length - 1) * GLYPH_GAP * scale
 }
 
-private fun glyphRows(character: Char): List<String> =
-    GLYPHS[character] ?: GLYPHS.getValue('?')
+private fun glyphRows(character: Char): List<String> {
+    val letter = if (character in 'a'..'z') character.uppercaseChar() else character
+    return GLYPHS[letter] ?: GLYPHS.getValue('?')
+}
 
 private val GLYPHS: Map<Char, List<String>> = mapOf(
     ' ' to glyph("00000", "00000", "00000", "00000", "00000", "00000", "00000"),
+    '.' to glyph("00000", "00000", "00000", "00000", "00000", "01100", "01100"),
     '?' to glyph("01110", "10001", "00010", "00100", "00100", "00000", "00100"),
     'A' to glyph("01110", "10001", "10001", "11111", "10001", "10001", "10001"),
     'B' to glyph("11110", "10001", "10001", "11110", "10001", "10001", "11110"),
