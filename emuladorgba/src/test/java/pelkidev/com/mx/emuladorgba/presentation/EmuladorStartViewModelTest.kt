@@ -8,6 +8,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import pelkidev.com.mx.emuladorgba.domain.GbaButton
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 import pelkidev.com.mx.emuladorgba.domain.GbaMachine
 
@@ -290,6 +291,54 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun heldControl_reachesTheProgram() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { readControls() }
+        viewModel.onControlChanged(GbaButton.A, true)
+
+        viewModel.onMachineTick()
+
+        assertEquals(pixelAfter(setOf(GbaButton.A)), viewModel.uiState.value.frame!!.pixel(0, 0))
+    }
+
+    @Test
+    fun twoHeldControls_bothReachTheProgram() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { readControls() }
+        viewModel.onControlChanged(GbaButton.A, true)
+        viewModel.onControlChanged(GbaButton.B, true)
+
+        viewModel.onMachineTick()
+
+        assertEquals(
+            pixelAfter(setOf(GbaButton.A, GbaButton.B)),
+            viewModel.uiState.value.frame!!.pixel(0, 0),
+        )
+    }
+
+    @Test
+    fun releasedControl_noLongerReachesTheProgram() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { readControls() }
+        viewModel.onControlChanged(GbaButton.A, true)
+        viewModel.onMachineTick()
+
+        viewModel.onControlChanged(GbaButton.A, false)
+        viewModel.onMachineTick()
+
+        assertEquals(pixelAfter(emptySet()), viewModel.uiState.value.frame!!.pixel(0, 0))
+    }
+
+    @Test
+    fun withoutARom_aControlDoesNothing() {
+        val viewModel = EmuladorStartViewModel()
+
+        viewModel.onControlChanged(GbaButton.A, true)
+
+        assertNull(viewModel.uiState.value.frame)
+    }
+
+    @Test
     fun withoutARom_theMachineDoesNotRun() {
         val viewModel = EmuladorStartViewModel()
 
@@ -305,6 +354,23 @@ class EmuladorStartViewModelTest {
         val clear = ViewModel::class.java.getDeclaredMethod("onCleared")
         clear.isAccessible = true
         clear.invoke(this)
+    }
+
+    private fun readControls(): ByteArray = words(
+        0xE3A00000.toInt(),
+        0xE3A01404.toInt(),
+        0xE2811C01.toInt(),
+        0xE2811030.toInt(),
+        0xE3A03406.toInt(),
+        0xE28F4001.toInt(),
+        0xE12FFF14.toInt(),
+    ) + byteArrayOf(0x0A, 0x5A, 0x1A, 0x52, 0xFC.toByte(), 0xE7.toByte())
+
+    private fun pixelAfter(buttons: Set<GbaButton>): Int {
+        val machine = GbaMachine(readControls())
+        machine.hold(buttons)
+        machine.step()
+        return machine.frame().pixel(0, 0)
     }
 
     private fun loopingDirectChannel(): ByteArray = words(

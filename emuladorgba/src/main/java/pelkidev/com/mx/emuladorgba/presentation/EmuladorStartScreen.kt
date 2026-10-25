@@ -11,6 +11,8 @@ import android.provider.OpenableColumns
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pelkidev.com.mx.emuladorgba.R
+import pelkidev.com.mx.emuladorgba.domain.GbaButton
 
 @Composable
 fun EmuladorStartScreen(
@@ -100,7 +103,10 @@ fun EmuladorStartScreen(
                         .fillMaxWidth()
                         .weight(1f),
                 )
-                GbaControls(modifier = Modifier.padding(top = 8.dp))
+                GbaControls(
+                    modifier = Modifier.padding(top = 8.dp),
+                    onChanged = viewModel::onControlChanged,
+                )
             }
         }
         TextButton(
@@ -116,14 +122,17 @@ fun EmuladorStartScreen(
 }
 
 @Composable
-private fun GbaControls(modifier: Modifier = Modifier) {
+private fun GbaControls(
+    onChanged: (GbaButton, Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Control("L")
-            Control("R")
+            Control("L", GbaButton.L, onChanged)
+            Control("R", GbaButton.R, onChanged)
         }
         Row(
             modifier = Modifier
@@ -132,35 +141,45 @@ private fun GbaControls(modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Dpad()
+            Dpad(onChanged)
             Row {
-                Control("Select")
-                Control("Start")
+                Control("Select", GbaButton.SELECT, onChanged)
+                Control("Start", GbaButton.START, onChanged)
             }
             Row {
-                Control("B")
-                Control("A")
+                Control("B", GbaButton.B, onChanged)
+                Control("A", GbaButton.A, onChanged)
             }
         }
     }
 }
 
 @Composable
-private fun Dpad() {
+private fun Dpad(onChanged: (GbaButton, Boolean) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Control("↑")
+        Control("↑", GbaButton.UP, onChanged)
         Row {
-            Control("←")
-            Control("→")
+            Control("←", GbaButton.LEFT, onChanged)
+            Control("→", GbaButton.RIGHT, onChanged)
         }
-        Control("↓")
+        Control("↓", GbaButton.DOWN, onChanged)
     }
 }
 
 @Composable
-private fun Control(label: String) {
+private fun Control(
+    label: String,
+    button: GbaButton,
+    onChanged: (GbaButton, Boolean) -> Unit,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    LaunchedEffect(pressed) {
+        onChanged(button, pressed)
+    }
     TextButton(
         onClick = {},
+        interactionSource = interaction,
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
     ) {
         Text(text = label)

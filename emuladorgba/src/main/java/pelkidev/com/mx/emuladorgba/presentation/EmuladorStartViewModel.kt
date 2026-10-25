@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import pelkidev.com.mx.emuladorgba.domain.GbaButton
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 import pelkidev.com.mx.emuladorgba.domain.GbaMachine
 import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
@@ -32,6 +33,7 @@ class EmuladorStartViewModel : ViewModel() {
 
     @Volatile
     private var machine: GbaMachine? = null
+    private var heldButtons = emptySet<GbaButton>()
     private var ticker: Job? = null
     private val tickerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -42,6 +44,7 @@ class EmuladorStartViewModel : ViewModel() {
         }
         val bytes = readBytes() ?: return
         loadedRom = bytes
+        heldButtons = emptySet()
         val next = GbaMachine(bytes)
         machine = next
         restartTicker()
@@ -53,6 +56,14 @@ class EmuladorStartViewModel : ViewModel() {
                 samples = byteArrayOf(),
             )
         }
+    }
+
+    fun onControlChanged(button: GbaButton, held: Boolean) {
+        val running = machine ?: return
+        val next = if (held) heldButtons + button else heldButtons - button
+        if (next == heldButtons) return
+        heldButtons = next
+        running.hold(next)
     }
 
     fun onMachineTick() {

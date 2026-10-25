@@ -30,6 +30,7 @@ class GbaMachine(private val rom: ByteArray) {
     private var flagC = false
     private var flagV = false
     private val directSamples = ArrayList<Byte>()
+    @Volatile
     private var heldMask = 0
 
     init {
