@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-25T22:28:51.350Z" hostname="Mac-mini-de-Alejandro.local" time="0.087">
-  <properties/>
-  <testcase name="unknownInstruction_keepsTheObject" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.048"/>
-  <testcase name="object_paintsOverTheBackground" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.033"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
