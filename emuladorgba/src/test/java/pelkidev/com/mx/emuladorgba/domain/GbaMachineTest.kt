@@ -256,32 +256,18 @@ class GbaMachineTest {
 
     @Test
     fun object_paintsOverTheBackground() {
-        val machine = GbaMachine(
-            words(
-                0xE3A00404.toInt(),
-                0xE3A01C11.toInt(),
-                0xE1C010B0.toInt(),
-                0xE3A01C01.toInt(),
-                0xE1C010B8.toInt(),
-                0xE3A03405.toInt(),
-                0xE3A0201F.toInt(),
-                0xE1C320B2.toInt(),
-                0xE3A02FF8.toInt(),
-                0xE2833C02.toInt(),
-                0xE1C320B2.toInt(),
-                0xE3A04406.toInt(),
-                0xE3A02001.toInt(),
-                0xE1C420B0.toInt(),
-                0xE2844801.toInt(),
-                0xE2844020.toInt(),
-                0xE1C420B0.toInt(),
-                0xE3A05407.toInt(),
-                0xE3A02008.toInt(),
-                0xE1C520B2.toInt(),
-                0xE3A02001.toInt(),
-                0xE1C520B4.toInt(),
-            ),
-        )
+        val machine = GbaMachine(objectOverBackground())
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+        assertEquals(GREEN, machine.frame().pixel(8, 0))
+        assertEquals(BLACK, machine.frame().pixel(1, 0))
+    }
+
+    @Test
+    fun unknownInstruction_keepsTheObject() {
+        val machine = GbaMachine(objectOverBackground() + words(0xFFFFFFFF.toInt()))
 
         machine.step()
 
@@ -477,6 +463,31 @@ class GbaMachineTest {
         0xE28F4001.toInt(),
         0xE12FFF14.toInt(),
     ) + byteArrayOf(0x0A, 0x5A, 0x1A, 0x52, 0xFC.toByte(), 0xE7.toByte())
+
+    private fun objectOverBackground(): ByteArray = words(
+        0xE3A00404.toInt(),
+        0xE3A01C11.toInt(),
+        0xE1C010B0.toInt(),
+        0xE3A01C01.toInt(),
+        0xE1C010B8.toInt(),
+        0xE3A03405.toInt(),
+        0xE3A0201F.toInt(),
+        0xE1C320B2.toInt(),
+        0xE3A02FF8.toInt(),
+        0xE2833C02.toInt(),
+        0xE1C320B2.toInt(),
+        0xE3A04406.toInt(),
+        0xE3A02001.toInt(),
+        0xE1C420B0.toInt(),
+        0xE2844801.toInt(),
+        0xE2844020.toInt(),
+        0xE1C420B0.toInt(),
+        0xE3A05407.toInt(),
+        0xE3A02008.toInt(),
+        0xE1C520B2.toInt(),
+        0xE3A02001.toInt(),
+        0xE1C520B4.toInt(),
+    )
 
     private fun paintRedAtOrigin(): ByteArray = words(
         0xE3A01406.toInt(), // mov r1, #0x06000000
