@@ -1,0 +1,1 @@
+int string emuladorgba_choose_file 0x0

@@ -1,1 +1,2 @@
 pelkidev.com.mx.emuladorgba
+string emuladorgba_choose_file
