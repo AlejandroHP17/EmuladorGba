@@ -291,6 +291,44 @@ class GbaMachineTest {
     }
 
     @Test
+    fun laterObject_usesItsOwnColor() {
+        val machine = GbaMachine(
+            words(
+                0xE3A00404.toInt(),
+                0xE3A01C11.toInt(),
+                0xE1C010B0.toInt(),
+                0xE3A01C01.toInt(),
+                0xE1C010B8.toInt(),
+                0xE3A03405.toInt(),
+                0xE3A0201F.toInt(),
+                0xE1C320B2.toInt(),
+                0xE3A02FF8.toInt(),
+                0xE2833C02.toInt(),
+                0xE1C322B2.toInt(),
+                0xE3A04406.toInt(),
+                0xE3A02001.toInt(),
+                0xE1C420B0.toInt(),
+                0xE2844801.toInt(),
+                0xE2844020.toInt(),
+                0xE1C420B0.toInt(),
+                0xE3A05407.toInt(),
+                0xE2855008.toInt(),
+                0xE3A02008.toInt(),
+                0xE1C520B2.toInt(),
+                0xE3A02A01.toInt(),
+                0xE2822001.toInt(),
+                0xE1C520B4.toInt(),
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+        assertEquals(GREEN, machine.frame().pixel(8, 0))
+        assertEquals(BLACK, machine.frame().pixel(1, 0))
+    }
+
+    @Test
     fun unknownInstruction_keepsTheTiledBackground() {
         val machine = GbaMachine(
             words(
