@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-25T22:38:16.189Z" hostname="Mac-mini-de-Alejandro.local" time="0.058">
+  <properties/>
+  <testcase name="waiting_replacesThePictureWithoutAControl" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.055"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

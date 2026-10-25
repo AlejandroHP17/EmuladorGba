@@ -207,6 +207,22 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun waiting_replacesThePictureWithoutAControl() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { movingPicture() }
+        val initial = viewModel.uiState.value.frame!!
+
+        viewModel.onMachineTick()
+        val first = viewModel.uiState.value.frame!!
+        viewModel.onMachineTick()
+        val second = viewModel.uiState.value.frame!!
+
+        assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, second.pixels.size)
+        assertFalse(initial.pixels.contentEquals(first.pixels))
+        assertFalse(first.pixels.contentEquals(second.pixels))
+    }
+
+    @Test
     fun anotherGba_dropsThePreviousObject() {
         val viewModel = EmuladorStartViewModel()
         viewModel.onFileChosen("juego.gba") { objectOverBackground() }
@@ -435,6 +451,14 @@ class EmuladorStartViewModelTest {
         0xE28110A0.toInt(),
         0xE5812000.toInt(),
         0x44332211,
+    )
+
+    private fun movingPicture(): ByteArray = words(
+        0xE3A04406.toInt(),
+        0xE3A02000.toInt(),
+        0xE2822001.toInt(),
+        0xE1C420B0.toInt(),
+        0xEAFFFFFC.toInt(),
     )
 
     private fun objectOverBackground(): ByteArray = words(
