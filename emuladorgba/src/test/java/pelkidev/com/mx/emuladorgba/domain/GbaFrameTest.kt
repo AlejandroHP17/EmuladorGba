@@ -1,6 +1,7 @@
 package pelkidev.com.mx.emuladorgba.domain
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.fail
 import org.junit.Test
 
@@ -35,6 +36,21 @@ class GbaFrameTest {
         assertEquals(0xFFFFFFFF.toInt(), frame.pixel(0, 8))
         assertEquals(0xFFFFFFFF.toInt(), frame.pixel(120, 15))
         assertEquals(0xFF000000.toInt(), frame.pixel(0, 16))
+    }
+
+    @Test
+    fun title_isDrawnOnTheFrameInsteadOfStripes() {
+        val frame = titleFrame("A")
+        val scale = 3
+        val textWidth = 5 * scale
+        val originX = (GbaFrame.WIDTH - textWidth) / 2
+        val originY = (GbaFrame.HEIGHT - 7 * scale) / 2
+
+        assertEquals(0xFF000000.toInt(), frame.pixel(0, 0))
+        assertEquals(0xFF000000.toInt(), frame.pixel(originX, originY))
+        assertEquals(0xFFFFFFFF.toInt(), frame.pixel(originX + scale, originY))
+        assertFalse(frame.pixels.contentEquals(stripeFrame().pixels))
+        assertFalse(frame.pixels.contentEquals(titleFrame("B").pixels))
     }
 
     @Test
