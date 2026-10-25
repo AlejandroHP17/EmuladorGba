@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-25T16:07:56.800Z" hostname="Mac-mini-de-Alejandro.local" time="0.021">
+  <properties/>
+  <testcase name="emptyOrUnreadableTitle_hasNoTitle" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.018"/>
+  <testcase name="title_isTheTwelveBytesStoredInTheHeader" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>
+  <testcase name="trailingSpaces_areNotPartOfTheTitle" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>
+  <testcase name="anotherHeader_hasItsOwnTitle" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
