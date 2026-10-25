@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-25T15:56:40.828Z" hostname="Mac-mini-de-Alejandro.local" time="0.015">
+<testsuite name="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-25T16:00:11.080Z" hostname="Mac-mini-de-Alejandro.local" time="0.016">
   <properties/>
-  <testcase name="otherExtension_keepsTheGameAlreadyLoaded" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.012"/>
-  <testcase name="withoutAGba_thereIsNoFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.0"/>
+  <testcase name="otherExtension_keepsTheGameAlreadyLoaded" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.011"/>
+  <testcase name="withoutAGba_thereIsNoFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
   <testcase name="gbaFile_keepsTheBytesForThisSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
-  <testcase name="unreadGba_keepsThePreviousSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.0"/>
+  <testcase name="unreadGba_keepsThePreviousSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
   <testcase name="otherExtension_doesNotLoadAndAsksForGba" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.0"/>
   <testcase name="anotherGba_replacesTheFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>

@@ -27,6 +27,17 @@ class GbaFrameTest {
     }
 
     @Test
+    fun stripes_alternateEveryEightRows() {
+        val frame = stripeFrame()
+
+        assertEquals(0xFF000000.toInt(), frame.pixel(0, 0))
+        assertEquals(0xFF000000.toInt(), frame.pixel(GbaFrame.WIDTH - 1, 7))
+        assertEquals(0xFFFFFFFF.toInt(), frame.pixel(0, 8))
+        assertEquals(0xFFFFFFFF.toInt(), frame.pixel(120, 15))
+        assertEquals(0xFF000000.toInt(), frame.pixel(0, 16))
+    }
+
+    @Test
     fun otherSize_isNotAFrame() {
         try {
             GbaFrame(IntArray(10))
