@@ -223,6 +223,35 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun anotherGba_dropsThePreviousMovement() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { movingPicture() }
+        viewModel.onMachineTick()
+        viewModel.onMachineTick()
+        val moving = viewModel.uiState.value.frame!!
+
+        viewModel.onFileChosen("otro.gba") { byteArrayOf(1) }
+        viewModel.onMachineTick()
+
+        val shown = viewModel.uiState.value.frame!!
+        assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, shown.pixels.size)
+        assertFalse(moving.pixels.contentEquals(shown.pixels))
+    }
+
+    @Test
+    fun leaving_stopsTheMovement() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { movingPicture() }
+        viewModel.onMachineTick()
+        val moving = viewModel.uiState.value.frame
+
+        viewModel.clear()
+        viewModel.onMachineTick()
+
+        assertTrue(viewModel.uiState.value.frame === moving)
+    }
+
+    @Test
     fun anotherGba_dropsThePreviousObject() {
         val viewModel = EmuladorStartViewModel()
         viewModel.onFileChosen("juego.gba") { objectOverBackground() }
