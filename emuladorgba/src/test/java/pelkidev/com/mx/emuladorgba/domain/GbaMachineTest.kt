@@ -2,6 +2,7 @@ package pelkidev.com.mx.emuladorgba.domain
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class GbaMachineTest {
@@ -277,6 +278,20 @@ class GbaMachineTest {
     }
 
     @Test
+    fun twoAdvances_leaveDifferentPictures() {
+        val machine = GbaMachine(movingPicture())
+
+        machine.step()
+        val first = machine.frame()
+        machine.step()
+        val second = machine.frame()
+
+        assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, first.pixels.size)
+        assertEquals(first.pixels.size, second.pixels.size)
+        assertFalse(first.pixels.contentEquals(second.pixels))
+    }
+
+    @Test
     fun laterObject_usesItsOwnColor() {
         val machine = GbaMachine(
             words(
@@ -501,6 +516,14 @@ class GbaMachineTest {
         0xE1C120B0.toInt(),
         0xFFFFFFFF.toInt(),
         0xE1C120B2.toInt(), // strh r2, [r1, #2]
+    )
+
+    private fun movingPicture(): ByteArray = words(
+        0xE3A04406.toInt(),
+        0xE3A02000.toInt(),
+        0xE2822001.toInt(),
+        0xE1C420B0.toInt(),
+        0xEAFFFFFC.toInt(),
     )
 
     private fun words(vararg instructions: Int): ByteArray {
