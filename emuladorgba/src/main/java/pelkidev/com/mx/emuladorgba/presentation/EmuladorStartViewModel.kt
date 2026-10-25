@@ -5,11 +5,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
 
 data class EmuladorStartUiState(
     val loadedFileName: String? = null,
     val showInvalidFileMessage: Boolean = false,
+    val frame: GbaFrame? = null,
 )
 
 class EmuladorStartViewModel : ViewModel() {
@@ -30,6 +32,7 @@ class EmuladorStartViewModel : ViewModel() {
             it.copy(
                 loadedFileName = fileName.trim(),
                 showInvalidFileMessage = false,
+                frame = GbaFrame(IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT)),
             )
         }
     }
