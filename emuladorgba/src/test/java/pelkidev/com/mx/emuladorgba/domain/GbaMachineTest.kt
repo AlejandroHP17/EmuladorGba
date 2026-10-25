@@ -35,7 +35,7 @@ class GbaMachineTest {
             0xE28F3001.toInt(),
             0xE12FFF13.toInt(),
         )
-        val machine = GbaMachine(arm + byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0x0A, 0x52))
+        val machine = GbaMachine(arm + byteArrayOf(0x00, 0xDE.toByte(), 0x0A, 0x52))
 
         machine.step()
 
@@ -68,6 +68,84 @@ class GbaMachineTest {
                 0xE3A01406.toInt(),
                 0xE1C120B0.toInt(),
                 31,
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun thumbAdd_paintsTheComputedColor() {
+        val arm = words(
+            0xE3A00000.toInt(),
+            0xE3A01406.toInt(),
+            0xE28F3001.toInt(),
+            0xE12FFF13.toInt(),
+        )
+        val machine = GbaMachine(arm + byteArrayOf(0x1E, 0x22, 0x01, 0x32, 0x0A, 0x52))
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun directCopy_paintsTheCopiedColor() {
+        val machine = GbaMachine(
+            words(
+                0xE59F4014.toInt(),
+                0xE59F0014.toInt(),
+                0xE59F1014.toInt(),
+                0xE59F2014.toInt(),
+                0xE5840000.toInt(),
+                0xE5841004.toInt(),
+                0xE5842008.toInt(),
+                0x040000D4,
+                0x0800002C.toInt(),
+                0x06000000,
+                0x80000001.toInt(),
+                0x001F,
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun biosCopy_paintsTheCopiedColor() {
+        val machine = GbaMachine(
+            words(
+                0xE59F0008.toInt(),
+                0xE59F1008.toInt(),
+                0xE59F2008.toInt(),
+                0xEF00000B.toInt(),
+                0x0800001C.toInt(),
+                0x06000000,
+                1,
+                0x001F,
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun biosExpand_paintsTheExpandedColor() {
+        val machine = GbaMachine(
+            words(
+                0xE59F0004.toInt(),
+                0xE59F1004.toInt(),
+                0xEF000012.toInt(),
+                0x08000014.toInt(),
+                0x06000000,
+                0x00000210,
+                0x00001F00,
             ),
         )
 
