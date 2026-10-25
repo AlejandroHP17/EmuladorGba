@@ -61,6 +61,14 @@ fun EmuladorStartScreen(
             ) {
                 Text(text = stringResource(R.string.emuladorgba_choose_file))
             }
+            if (uiState.showInvalidFileMessage) {
+                Text(
+                    text = stringResource(R.string.emuladorgba_invalid_file),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+            }
             uiState.loadedFileName?.let { fileName ->
                 Text(
                     text = fileName,

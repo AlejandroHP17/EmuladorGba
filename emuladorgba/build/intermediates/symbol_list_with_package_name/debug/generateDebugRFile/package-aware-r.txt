@@ -1,2 +1,3 @@
 pelkidev.com.mx.emuladorgba
 string emuladorgba_choose_file
+string emuladorgba_invalid_file

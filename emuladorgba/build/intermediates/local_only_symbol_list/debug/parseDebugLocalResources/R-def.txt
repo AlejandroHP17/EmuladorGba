@@ -1,3 +1,4 @@
 R_DEF: Internal format may change without notice
 local
 string emuladorgba_choose_file
+string emuladorgba_invalid_file

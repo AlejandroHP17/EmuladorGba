@@ -9,6 +9,7 @@ import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
 
 data class EmuladorStartUiState(
     val loadedFileName: String? = null,
+    val showInvalidFileMessage: Boolean = false,
 )
 
 class EmuladorStartViewModel : ViewModel() {
@@ -16,7 +17,15 @@ class EmuladorStartViewModel : ViewModel() {
     val uiState: StateFlow<EmuladorStartUiState> = _uiState.asStateFlow()
 
     fun onFileNameChosen(fileName: String) {
-        if (!isGbaFileName(fileName)) return
-        _uiState.update { it.copy(loadedFileName = fileName.trim()) }
+        if (!isGbaFileName(fileName)) {
+            _uiState.update { it.copy(showInvalidFileMessage = true) }
+            return
+        }
+        _uiState.update {
+            it.copy(
+                loadedFileName = fileName.trim(),
+                showInvalidFileMessage = false,
+            )
+        }
     }
 }

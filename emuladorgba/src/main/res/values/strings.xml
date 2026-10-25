@@ -1,3 +1,4 @@
 <resources>
     <string name="emuladorgba_choose_file">Elegir .gba</string>
+    <string name="emuladorgba_invalid_file">Elige un archivo .gba</string>
 </resources>
