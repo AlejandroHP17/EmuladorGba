@@ -14,6 +14,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -98,6 +100,7 @@ fun EmuladorStartScreen(
                         .fillMaxWidth()
                         .weight(1f),
                 )
+                GbaControls(modifier = Modifier.padding(top = 8.dp))
             }
         }
         TextButton(
@@ -109,6 +112,58 @@ fun EmuladorStartScreen(
         ) {
             Text("Atrás")
         }
+    }
+}
+
+@Composable
+private fun GbaControls(modifier: Modifier = Modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Control("L")
+            Control("R")
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Dpad()
+            Row {
+                Control("Select")
+                Control("Start")
+            }
+            Row {
+                Control("B")
+                Control("A")
+            }
+        }
+    }
+}
+
+@Composable
+private fun Dpad() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Control("↑")
+        Row {
+            Control("←")
+            Control("→")
+        }
+        Control("↓")
+    }
+}
+
+@Composable
+private fun Control(label: String) {
+    TextButton(
+        onClick = {},
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+    ) {
+        Text(text = label)
     }
 }
 
