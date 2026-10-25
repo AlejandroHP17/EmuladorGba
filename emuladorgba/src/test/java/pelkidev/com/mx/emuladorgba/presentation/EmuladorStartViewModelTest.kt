@@ -101,4 +101,30 @@ class EmuladorStartViewModelTest {
         assertNotNull(viewModel.uiState.value.frame)
         assertTrue(viewModel.uiState.value.frame !== first)
     }
+
+    @Test
+    fun whileARomIsLoaded_eachSecondSwitchesTheFrame() {
+        val viewModel = EmuladorStartViewModel()
+        val rom = ByteArray(0xA0 + 12)
+        rom[0x04] = 0x80.toByte()
+        "TETRIS      ".toByteArray(Charsets.US_ASCII).copyInto(rom, destinationOffset = 0xA0)
+        viewModel.onFileChosen("juego.gba") { rom }
+        val title = viewModel.uiState.value.frame!!.pixels
+
+        viewModel.onSecondElapsed()
+        val graphic = viewModel.uiState.value.frame!!.pixels
+
+        assertFalse(title.contentEquals(graphic))
+        viewModel.onSecondElapsed()
+        assertArrayEquals(title, viewModel.uiState.value.frame!!.pixels)
+    }
+
+    @Test
+    fun withoutARom_aSecondDoesNotCreateAFrame() {
+        val viewModel = EmuladorStartViewModel()
+
+        viewModel.onSecondElapsed()
+
+        assertNull(viewModel.uiState.value.frame)
+    }
 }

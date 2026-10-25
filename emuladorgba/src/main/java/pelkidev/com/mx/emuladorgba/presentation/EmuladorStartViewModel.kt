@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
-import pelkidev.com.mx.emuladorgba.domain.romFrame
+import pelkidev.com.mx.emuladorgba.domain.RomFrames
+import pelkidev.com.mx.emuladorgba.domain.romFrames
 
 data class EmuladorStartUiState(
     val loadedFileName: String? = null,
@@ -22,6 +23,9 @@ class EmuladorStartViewModel : ViewModel() {
     var loadedRom: ByteArray? = null
         private set
 
+    private var show: RomFrames? = null
+    private var step = 0
+
     fun onFileChosen(fileName: String, readBytes: () -> ByteArray?) {
         if (!isGbaFileName(fileName)) {
             _uiState.update { it.copy(showInvalidFileMessage = true) }
@@ -29,12 +33,21 @@ class EmuladorStartViewModel : ViewModel() {
         }
         val bytes = readBytes() ?: return
         loadedRom = bytes
+        val frames = romFrames(bytes, fileName.trim())
+        show = frames
+        step = 0
         _uiState.update {
             it.copy(
                 loadedFileName = fileName.trim(),
                 showInvalidFileMessage = false,
-                frame = romFrame(bytes, fileName.trim()),
+                frame = frames.frameAt(0),
             )
         }
+    }
+
+    fun onSecondElapsed() {
+        val frames = show ?: return
+        step += 1
+        _uiState.update { it.copy(frame = frames.frameAt(step)) }
     }
 }
