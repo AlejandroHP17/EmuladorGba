@@ -354,6 +354,38 @@ class GbaMachineTest {
     }
 
     @Test
+    fun heldControl_paintsTheKnownPixel() {
+        val machine = GbaMachine(readControls())
+        machine.hold(setOf(GbaButton.A))
+
+        machine.step()
+
+        assertEquals(colorOf(0x03FE), machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun twoHeldControls_paintBoth() {
+        val machine = GbaMachine(readControls())
+        machine.hold(setOf(GbaButton.A, GbaButton.B))
+
+        machine.step()
+
+        assertEquals(colorOf(0x03FC), machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun releasedControl_noLongerPaintsThePress() {
+        val machine = GbaMachine(readControls())
+        machine.hold(setOf(GbaButton.A))
+        machine.step()
+
+        machine.hold(emptySet())
+        machine.step()
+
+        assertEquals(colorOf(0x03FF), machine.frame().pixel(0, 0))
+    }
+
+    @Test
     fun emptyRom_staysBlank() {
         val machine = GbaMachine(ByteArray(0))
 
@@ -361,6 +393,16 @@ class GbaMachineTest {
 
         assertEquals(BLACK, machine.frame().pixel(0, 0))
     }
+
+    private fun readControls(): ByteArray = words(
+        0xE3A00000.toInt(),
+        0xE3A01404.toInt(),
+        0xE2811C01.toInt(),
+        0xE2811030.toInt(),
+        0xE3A03406.toInt(),
+        0xE28F4001.toInt(),
+        0xE12FFF14.toInt(),
+    ) + byteArrayOf(0x0A, 0x5A, 0x1A, 0x52, 0xFC.toByte(), 0xE7.toByte())
 
     private fun paintRedAtOrigin(): ByteArray = words(
         0xE3A01406.toInt(), // mov r1, #0x06000000
@@ -390,5 +432,13 @@ class GbaMachineTest {
     private companion object {
         const val RED = 0xFFFF0000.toInt()
         const val BLACK = 0xFF000000.toInt()
+
+        fun colorOf(gba555: Int): Int {
+            if (gba555 == 0) return BLACK
+            val red = (gba555 and 0x1F) * 255 / 31
+            val green = ((gba555 ushr 5) and 0x1F) * 255 / 31
+            val blue = ((gba555 ushr 10) and 0x1F) * 255 / 31
+            return (0xFF shl 24) or (red shl 16) or (green shl 8) or blue
+        }
     }
 }

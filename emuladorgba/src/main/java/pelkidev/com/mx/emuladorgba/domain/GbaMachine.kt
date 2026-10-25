@@ -30,6 +30,7 @@ class GbaMachine(private val rom: ByteArray) {
     private var flagC = false
     private var flagV = false
     private val directSamples = ArrayList<Byte>()
+    private var heldMask = 0
 
     init {
         io[0x130] = 0xFF.toByte()
@@ -44,6 +45,10 @@ class GbaMachine(private val rom: ByteArray) {
     }
 
     fun samples(): ByteArray = ByteArray(directSamples.size) { directSamples[it] }
+
+    fun hold(buttons: Set<GbaButton>) {
+        heldMask = buttons.fold(0) { mask, button -> mask or button.mask }
+    }
 
     fun frame(): GbaFrame {
         val display = readHalf(IO_BASE)
@@ -441,6 +446,8 @@ class GbaMachine(private val rom: ByteArray) {
         return readHalf(address) or (readHalf(address + 2) shl 16)
     }
 
+    private fun keyInput(): Int = 0x03FF and heldMask.inv()
+
     private fun readHalf(address: Int): Int {
         if (address % 2 != 0) return 0
         return readByte(address) or (readByte(address + 1) shl 8)
@@ -453,6 +460,8 @@ class GbaMachine(private val rom: ByteArray) {
             scanline += 1
             return line
         }
+        if (address == 0x04000130) return keyInput() and 0xFF
+        if (address == 0x04000131) return keyInput() ushr 8
         if (address in 0x0E000000 until 0x0E010000) return readSave(address)
         val memory = memoryAt(address) ?: return 0
         val offset = address - memory.base
@@ -830,6 +839,19 @@ private fun signExtend(value: Int, bits: Int): Int {
 private fun signByte(value: Int): Int = (value shl 24) shr 24
 
 private fun signHalf(value: Int): Int = (value shl 16) shr 16
+
+enum class GbaButton(internal val mask: Int) {
+    A(1),
+    B(1 shl 1),
+    SELECT(1 shl 2),
+    START(1 shl 3),
+    RIGHT(1 shl 4),
+    LEFT(1 shl 5),
+    UP(1 shl 6),
+    DOWN(1 shl 7),
+    R(1 shl 8),
+    L(1 shl 9),
+}
 
 private fun rgb555(color: Int): Int {
     if (color == 0) return BLACK
