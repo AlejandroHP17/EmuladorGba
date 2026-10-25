@@ -254,6 +254,37 @@ class GbaMachineTest {
     }
 
     @Test
+    fun laterBackgroundMemory_paintsTheKnownColor() {
+        val machine = GbaMachine(
+            words(
+                0xE3A00404.toInt(),
+                0xE3A01C01.toInt(),
+                0xE1C010B0.toInt(),
+                0xE3A01C1F.toInt(),
+                0xE281100C.toInt(),
+                0xE1C010B8.toInt(),
+                0xE3A03405.toInt(),
+                0xE2833E1E.toInt(),
+                0xE3A0201F.toInt(),
+                0xE1C320B2.toInt(),
+                0xE3A04406.toInt(),
+                0xE2844A0C.toInt(),
+                0xE3A02001.toInt(),
+                0xE1C420B0.toInt(),
+                0xE3A04406.toInt(),
+                0xE2844CF8.toInt(),
+                0xE3A02CF0.toInt(),
+                0xE1C420B0.toInt(),
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+        assertEquals(BLACK, machine.frame().pixel(1, 0))
+    }
+
+    @Test
     fun emptyRom_staysBlank() {
         val machine = GbaMachine(ByteArray(0))
 

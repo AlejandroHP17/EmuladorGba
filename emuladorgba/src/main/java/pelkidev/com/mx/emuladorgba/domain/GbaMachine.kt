@@ -15,7 +15,7 @@ class GbaMachine(private val rom: ByteArray) {
     private val iwram = ByteArray(32 * 1024)
     private val io = ByteArray(0x400)
     private val palette = ByteArray(0x200)
-    private val vram = ByteArray(GbaFrame.WIDTH * GbaFrame.HEIGHT * 2)
+    private val vram = ByteArray(96 * 1024)
     private var pc = ROM_BASE
     private var thumb = false
     private var scanline = 0
