@@ -1,2 +1,0 @@
-int string emuladorgba_choose_file 0x0
-int string emuladorgba_invalid_file 0x0

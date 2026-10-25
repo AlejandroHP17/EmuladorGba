@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.28)
+project(emuladorgba_mgba C)
+
+include(FetchContent)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(LIBMGBA_ONLY ON CACHE BOOL "" FORCE)
+set(M_CORE_GBA ON CACHE BOOL "" FORCE)
+set(M_CORE_GB OFF CACHE BOOL "" FORCE)
+set(USE_DEBUGGERS OFF CACHE BOOL "" FORCE)
+set(USE_GDB_STUB OFF CACHE BOOL "" FORCE)
+set(USE_EDITLINE OFF CACHE BOOL "" FORCE)
+set(USE_FFMPEG OFF CACHE BOOL "" FORCE)
+set(USE_ZLIB OFF CACHE BOOL "" FORCE)
+set(USE_MINIZIP OFF CACHE BOOL "" FORCE)
+set(USE_PNG OFF CACHE BOOL "" FORCE)
+set(USE_LIBZIP OFF CACHE BOOL "" FORCE)
+set(USE_SQLITE3 OFF CACHE BOOL "" FORCE)
+set(USE_ELF OFF CACHE BOOL "" FORCE)
+set(USE_LUA OFF CACHE BOOL "" FORCE)
+set(USE_LZMA OFF CACHE BOOL "" FORCE)
+set(USE_DISCORD_RPC OFF CACHE BOOL "" FORCE)
+set(USE_EPOXY OFF CACHE BOOL "" FORCE)
+set(BUILD_GL OFF CACHE BOOL "" FORCE)
+set(BUILD_GLES2 OFF CACHE BOOL "" FORCE)
+set(BUILD_GLES3 OFF CACHE BOOL "" FORCE)
+set(BUILD_SUITE OFF CACHE BOOL "" FORCE)
+set(BUILD_CINEMA OFF CACHE BOOL "" FORCE)
+set(DISABLE_FRONTENDS ON CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    mgba
+    URL https://github.com/mgba-emu/mgba/archive/refs/tags/0.10.5.tar.gz
+    URL_HASH SHA256=91d6fbd32abcbdf030d58d3f562de25ebbc9d56040d513ff8e5c19bee9dacf14
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(mgba)
+
+add_library(emuladorgba_mgba SHARED emuladorgba_mgba.c)
+target_link_libraries(emuladorgba_mgba PRIVATE mgba log)

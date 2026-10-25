@@ -1,8 +1,0 @@
-pelkidev.com.mx.emuladorgba-pngs-0 /Users/ahernandezpel/StudioProjects/AllInOne/EmuladorGba/emuladorgba/build/generated/res/pngs/debug
-pelkidev.com.mx.emuladorgba-updated_navigation_xml-1 /Users/ahernandezpel/StudioProjects/AllInOne/EmuladorGba/emuladorgba/build/generated/updated_navigation_xml/debug
-pelkidev.com.mx.emuladorgba-mergeDebugResources-2 /Users/ahernandezpel/StudioProjects/AllInOne/EmuladorGba/emuladorgba/build/intermediates/incremental/debug/mergeDebugResources/merged.dir
-pelkidev.com.mx.emuladorgba-mergeDebugResources-3 /Users/ahernandezpel/StudioProjects/AllInOne/EmuladorGba/emuladorgba/build/intermediates/incremental/debug/mergeDebugResources/stripped.dir
-pelkidev.com.mx.emuladorgba-debug-4 /Users/ahernandezpel/StudioProjects/AllInOne/EmuladorGba/emuladorgba/build/intermediates/merged_res/debug/mergeDebugResources
-pelkidev.com.mx.emuladorgba-debug-5 /Users/ahernandezpel/StudioProjects/AllInOne/EmuladorGba/emuladorgba/build/intermediates/packaged_res/debug/packageDebugResources
-pelkidev.com.mx.emuladorgba-debug-6 /Users/ahernandezpel/StudioProjects/AllInOne/EmuladorGba/emuladorgba/src/debug/res
-pelkidev.com.mx.emuladorgba-main-7 /Users/ahernandezpel/StudioProjects/AllInOne/EmuladorGba/emuladorgba/src/main/res

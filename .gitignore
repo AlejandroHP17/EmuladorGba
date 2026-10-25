@@ -1,0 +1,39 @@
+# Gradle y Kotlin
+.gradle/
+.kotlin/
+build/
+local.properties
+
+# NDK / CMake (incluye el código de mGBA descargado al compilar)
+.cxx/
+.externalNativeBuild/
+
+# Android Studio
+*.iml
+/captures
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetSelector.xml
+.idea/deviceManager.xml
+.idea/androidTestResultsUserPreferences.xml
+.idea/studiobot.xml
+
+# Salidas sueltas
+*.apk
+*.aab
+*.aar
+*.log
+
+# ROMs, BIOS y partidas: nunca en el repo
+*.gba
+*.GBA
+*.sav
+*.ss[0-9]
+gba_bios.bin
+
+# Sistema
+.DS_Store

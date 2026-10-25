@@ -17,10 +17,30 @@ android {
         }
     }
 
+    ndkVersion = "30.0.16248370"
+
     defaultConfig {
         minSdk = 29
         consumerProguardFiles("consumer-rules.pro")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
+                    "-DCMAKE_BUILD_TYPE=Release",
+                )
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "4.1.2"
+        }
     }
 
     resourcePrefix = "emuladorgba_"
