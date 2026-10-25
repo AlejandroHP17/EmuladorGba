@@ -8,6 +8,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
+import pelkidev.com.mx.emuladorgba.domain.romFrame
 
 class EmuladorStartViewModelTest {
 
@@ -52,6 +53,17 @@ class EmuladorStartViewModelTest {
             viewModel.uiState.value.frame!!.pixels.size,
         )
         assertFalse(viewModel.uiState.value.showInvalidFileMessage)
+    }
+
+    @Test
+    fun gbaFile_buildsTheFrameFromTheRomBytes() {
+        val viewModel = EmuladorStartViewModel()
+        val rom = ByteArray(0xA0 + 12)
+        "TETRIS      ".toByteArray(Charsets.US_ASCII).copyInto(rom, destinationOffset = 0xA0)
+
+        viewModel.onFileChosen("  otro.gba  ") { rom }
+
+        assertArrayEquals(romFrame(rom, "otro.gba").pixels, viewModel.uiState.value.frame!!.pixels)
     }
 
     @Test

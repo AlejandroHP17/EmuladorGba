@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
-import pelkidev.com.mx.emuladorgba.domain.stripeFrame
+import pelkidev.com.mx.emuladorgba.domain.romFrame
 
 data class EmuladorStartUiState(
     val loadedFileName: String? = null,
@@ -33,7 +33,7 @@ class EmuladorStartViewModel : ViewModel() {
             it.copy(
                 loadedFileName = fileName.trim(),
                 showInvalidFileMessage = false,
-                frame = stripeFrame(),
+                frame = romFrame(bytes, fileName.trim()),
             )
         }
     }
