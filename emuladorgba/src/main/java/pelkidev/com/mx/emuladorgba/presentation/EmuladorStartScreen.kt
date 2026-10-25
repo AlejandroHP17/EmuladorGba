@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
 import android.provider.OpenableColumns
+import java.util.concurrent.atomic.AtomicBoolean
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -133,23 +134,28 @@ internal fun gbaPcm16(samples: ByteArray): ByteArray {
 }
 
 private class GbaPcmPlayer {
+    private val stop = AtomicBoolean(false)
     private var thread: HandlerThread? = null
     private var handler: Handler? = null
     private var track: AudioTrack? = null
 
     fun submit(samples: ByteArray) {
         if (samples.isEmpty()) {
+            stop.set(true)
             handler?.post { pause() } ?: return
             return
         }
+        stop.set(false)
         val copy = samples.copyOf()
         ensureHandler().post { play(copy) }
     }
 
     fun release() {
+        stop.set(true)
         val handler = handler ?: return
         val thread = thread ?: return
         handler.post {
+            pause()
             track?.release()
             track = null
         }
@@ -166,11 +172,22 @@ private class GbaPcmPlayer {
     }
 
     private fun play(samples: ByteArray) {
+        if (stop.get()) return
         val pcm = gbaPcm16(samples)
         val track = ensureTrack()
         if (track.state != AudioTrack.STATE_INITIALIZED) return
         track.play()
-        track.write(pcm, 0, pcm.size)
+        var offset = 0
+        while (offset < pcm.size) {
+            if (stop.get()) {
+                pause()
+                return
+            }
+            val count = minOf(WRITE_CHUNK, pcm.size - offset)
+            val written = track.write(pcm, offset, count)
+            if (written <= 0) return
+            offset += written
+        }
     }
 
     private fun pause() {
@@ -210,6 +227,7 @@ private class GbaPcmPlayer {
 
     private companion object {
         const val SAMPLE_RATE = 22050
+        const val WRITE_CHUNK = 1024
     }
 }
 

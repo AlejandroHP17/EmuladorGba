@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" tests="20" skipped="0" failures="0" errors="0" timestamp="2026-10-25T21:45:31.491Z" hostname="Mac-mini-de-Alejandro.local" time="0.683">
+<testsuite name="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" tests="22" skipped="0" failures="0" errors="0" timestamp="2026-10-25T21:51:00.841Z" hostname="Mac-mini-de-Alejandro.local" time="0.818">
   <properties/>
-  <testcase name="otherExtension_keepsTheTitleAlreadyShown" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.137"/>
-  <testcase name="loadedGba_showsTheMachineFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.003"/>
-  <testcase name="whenTheProgramWritesSound_theSamplesArePublished" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.027"/>
+  <testcase name="otherExtension_keepsTheTitleAlreadyShown" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.193"/>
+  <testcase name="loadedGba_showsTheMachineFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.004"/>
+  <testcase name="leaving_cutsTheSound" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.026"/>
+  <testcase name="whenTheProgramWritesSound_theSamplesArePublished" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.011"/>
+  <testcase name="anotherGba_replacesThePreviousSound" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.023"/>
   <testcase name="withoutAGba_thereIsNoFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
   <testcase name="pcm16_keepsTheSignedSample" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.003"/>
-  <testcase name="gbaFile_buildsTheFrameFromTheRomBytes" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
-  <testcase name="leaving_stopsTheAdvance" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.362"/>
+  <testcase name="gbaFile_buildsTheFrameFromTheRomBytes" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.004"/>
+  <testcase name="leaving_stopsTheAdvance" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.358"/>
   <testcase name="withoutARom_thereIsSilence" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.0"/>
-  <testcase name="whenTheMachinePaints_theShownFrameIsReplaced" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.013"/>
-  <testcase name="gbaFile_keepsTheBytesForThisSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
-  <testcase name="unreadGba_keepsThePreviousSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.0"/>
+  <testcase name="whenTheMachinePaints_theShownFrameIsReplaced" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.005"/>
+  <testcase name="gbaFile_keepsTheBytesForThisSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.002"/>
+  <testcase name="unreadGba_keepsThePreviousSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
   <testcase name="otherExtension_doesNotLoadAndAsksForGba" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
-  <testcase name="tiledBackground_replacesTheShownFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.044"/>
-  <testcase name="anotherGba_startsInSilence" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.01"/>
-  <testcase name="laterAdvanceWithoutWrites_publishesSilence" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.008"/>
-  <testcase name="anotherGba_replacesTheFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.003"/>
-  <testcase name="whenTheProgramDoesNotWriteSound_silenceIsPublished" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.003"/>
-  <testcase name="skippedInstruction_replacesTheShownFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.005"/>
-  <testcase name="repeatedSound_isPublishedAgain" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.043"/>
-  <testcase name="withoutARom_theMachineDoesNotRun" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
+  <testcase name="tiledBackground_replacesTheShownFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.06"/>
+  <testcase name="anotherGba_startsInSilence" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.004"/>
+  <testcase name="laterAdvanceWithoutWrites_publishesSilence" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.017"/>
+  <testcase name="anotherGba_replacesTheFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.009"/>
+  <testcase name="whenTheProgramDoesNotWriteSound_silenceIsPublished" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.006"/>
+  <testcase name="skippedInstruction_replacesTheShownFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.004"/>
+  <testcase name="repeatedSound_isPublishedAgain" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.059"/>
+  <testcase name="withoutARom_theMachineDoesNotRun" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.004"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

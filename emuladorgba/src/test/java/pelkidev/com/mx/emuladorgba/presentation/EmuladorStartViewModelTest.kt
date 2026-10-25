@@ -256,6 +256,31 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun anotherGba_replacesThePreviousSound() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { directChannelProgram() }
+        viewModel.onMachineTick()
+
+        viewModel.onFileChosen("otro.gba") { otherDirectChannel() }
+        assertEquals(0, viewModel.uiState.value.samples.size)
+        viewModel.onMachineTick()
+
+        assertArrayEquals(byteArrayOf(0x7F, 0, 0, 0), viewModel.uiState.value.samples)
+    }
+
+    @Test
+    fun leaving_cutsTheSound() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { directChannelProgram() }
+        viewModel.onMachineTick()
+
+        viewModel.clear()
+        viewModel.onMachineTick()
+
+        assertEquals(0, viewModel.uiState.value.samples.size)
+    }
+
+    @Test
     fun withoutARom_thereIsSilence() {
         val viewModel = EmuladorStartViewModel()
 
@@ -289,6 +314,14 @@ class EmuladorStartViewModelTest {
         0xE5812000.toInt(),
         0xEAFFFFFD.toInt(),
         0x44332211,
+    )
+
+    private fun otherDirectChannel(): ByteArray = words(
+        0xE59F2008.toInt(),
+        0xE3A01404.toInt(),
+        0xE28110A0.toInt(),
+        0xE5812000.toInt(),
+        0x0000007F,
     )
 
     private fun directChannelProgram(): ByteArray = words(

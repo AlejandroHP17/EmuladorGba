@@ -30,6 +30,7 @@ class EmuladorStartViewModel : ViewModel() {
     var loadedRom: ByteArray? = null
         private set
 
+    @Volatile
     private var machine: GbaMachine? = null
     private var ticker: Job? = null
     private val tickerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -57,6 +58,7 @@ class EmuladorStartViewModel : ViewModel() {
     fun onMachineTick() {
         val running = machine ?: return
         running.step()
+        if (machine !== running) return
         val next = running.frame()
         val heard = running.samples()
         _uiState.update { state ->
@@ -85,6 +87,7 @@ class EmuladorStartViewModel : ViewModel() {
         tickerScope.cancel()
         machine = null
         ticker = null
+        _uiState.update { it.copy(samples = byteArrayOf()) }
         super.onCleared()
     }
 
