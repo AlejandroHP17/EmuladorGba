@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pelkidev.com.mx.emuladorgba.domain.ManualRomLookTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-25T22:41:15.542Z" hostname="Mac-mini-de-Alejandro.local" time="0.974">
+  <properties/>
+  <testcase name="dumpTwoWaitingFrames" classname="pelkidev.com.mx.emuladorgba.domain.ManualRomLookTest" time="0.972"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
