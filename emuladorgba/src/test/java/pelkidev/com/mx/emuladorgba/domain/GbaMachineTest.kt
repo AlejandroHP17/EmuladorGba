@@ -17,14 +17,29 @@ class GbaMachineTest {
     }
 
     @Test
-    fun unknownInstruction_keepsTheLastFrame() {
+    fun unknownInstruction_isSkippedAndTheFrameStays() {
         val machine = GbaMachine(paintThenUnknown())
 
         machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+        assertEquals(RED, machine.frame().pixel(1, 0))
+    }
+
+    @Test
+    fun unknownThumbInstruction_isSkippedAndTheFollowingStorePaints() {
+        val arm = words(
+            0xE3A00000.toInt(),
+            0xE3A01406.toInt(),
+            0xE3A0201F.toInt(),
+            0xE28F3001.toInt(),
+            0xE12FFF13.toInt(),
+        )
+        val machine = GbaMachine(arm + byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0x0A, 0x52))
+
         machine.step()
 
         assertEquals(RED, machine.frame().pixel(0, 0))
-        assertEquals(BLACK, machine.frame().pixel(1, 0))
     }
 
     @Test

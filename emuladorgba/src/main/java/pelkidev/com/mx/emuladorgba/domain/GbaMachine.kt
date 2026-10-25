@@ -14,11 +14,9 @@ class GbaMachine(private val rom: ByteArray) {
     private val vram = ByteArray(GbaFrame.WIDTH * GbaFrame.HEIGHT * 2)
     private var pc = ROM_BASE
     private var thumb = false
-    private var halted = false
 
     fun step() {
         repeat(INSTRUCTIONS_PER_STEP) {
-            if (halted) return
             executeOne()
         }
     }
@@ -58,7 +56,7 @@ class GbaMachine(private val rom: ByteArray) {
                 pc += 4
             }
             executeLoadStore(word) -> Unit
-            else -> halted = true
+            else -> pc += 4
         }
     }
 
@@ -71,7 +69,7 @@ class GbaMachine(private val rom: ByteArray) {
             writeHalf(registers[rn] + registers[rm], registers[rd])
             pc += 2
         } else {
-            halted = true
+            pc += 2
         }
     }
 
