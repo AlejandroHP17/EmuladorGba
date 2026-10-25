@@ -1,6 +1,7 @@
 package pelkidev.com.mx.emuladorgba.domain
 
 private const val IO_BASE = 0x04000000
+private const val FIFO_A = 0x040000A0
 private const val EWRAM_BASE = 0x02000000
 private const val IWRAM_BASE = 0x03000000
 private const val PALETTE_BASE = 0x05000000
@@ -28,6 +29,7 @@ class GbaMachine(private val rom: ByteArray) {
     private var flagZ = false
     private var flagC = false
     private var flagV = false
+    private val directSamples = ArrayList<Byte>()
 
     init {
         io[0x130] = 0xFF.toByte()
@@ -35,10 +37,13 @@ class GbaMachine(private val rom: ByteArray) {
     }
 
     fun step() {
+        directSamples.clear()
         repeat(INSTRUCTIONS_PER_STEP) {
             executeOne()
         }
     }
+
+    fun samples(): ByteArray = ByteArray(directSamples.size) { directSamples[it] }
 
     fun frame(): GbaFrame {
         val display = readHalf(IO_BASE)
@@ -464,6 +469,7 @@ class GbaMachine(private val rom: ByteArray) {
         memory.bytes[offset + 1] = (value ushr 8).toByte()
         memory.bytes[offset + 2] = (value ushr 16).toByte()
         memory.bytes[offset + 3] = (value ushr 24).toByte()
+        captureDirectChannel(address, value, 4)
         directCopy(address)
         directCopy(address + 2)
     }
@@ -535,6 +541,7 @@ class GbaMachine(private val rom: ByteArray) {
         val offset = address - memory.base
         if (offset !in memory.bytes.indices) return
         memory.bytes[offset] = value.toByte()
+        captureDirectChannel(address, value, 1)
     }
 
     private fun writeHalf(address: Int, value: Int) {
@@ -544,7 +551,15 @@ class GbaMachine(private val rom: ByteArray) {
         if (offset < 0 || offset + 1 >= memory.bytes.size || offset % 2 != 0) return
         memory.bytes[offset] = value.toByte()
         memory.bytes[offset + 1] = (value ushr 8).toByte()
+        captureDirectChannel(address, value, 2)
         directCopy(address)
+    }
+
+    private fun captureDirectChannel(address: Int, value: Int, size: Int) {
+        if (address !in FIFO_A until FIFO_A + 4 || address % size != 0) return
+        repeat(size) { index ->
+            directSamples.add((value ushr (8 * index)).toByte())
+        }
     }
 
     private fun directCopy(address: Int) {

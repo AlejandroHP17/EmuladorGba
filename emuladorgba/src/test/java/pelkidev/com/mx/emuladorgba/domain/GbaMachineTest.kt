@@ -1,5 +1,6 @@
 package pelkidev.com.mx.emuladorgba.domain
 
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -306,6 +307,50 @@ class GbaMachineTest {
 
         assertEquals(RED, machine.frame().pixel(0, 0))
         assertEquals(BLACK, machine.frame().pixel(1, 0))
+    }
+
+    @Test
+    fun directChannel_returnsTheWrittenSamples() {
+        val machine = GbaMachine(
+            words(
+                0xE59F2008.toInt(),
+                0xE3A01404.toInt(),
+                0xE28110A0.toInt(),
+                0xE5812000.toInt(),
+                0x44332211,
+            ),
+        )
+
+        machine.step()
+
+        assertArrayEquals(byteArrayOf(0x11, 0x22, 0x33, 0x44), machine.samples())
+    }
+
+    @Test
+    fun programWithoutSound_staysSilent() {
+        val machine = GbaMachine(paintRedAtOrigin())
+
+        machine.step()
+
+        assertEquals(0, machine.samples().size)
+    }
+
+    @Test
+    fun laterAdvanceWithoutWrites_isSilent() {
+        val machine = GbaMachine(
+            words(
+                0xE59F2008.toInt(),
+                0xE3A01404.toInt(),
+                0xE28110A0.toInt(),
+                0xE5812000.toInt(),
+                0x44332211,
+            ),
+        )
+
+        machine.step()
+        machine.step()
+
+        assertEquals(0, machine.samples().size)
     }
 
     @Test
