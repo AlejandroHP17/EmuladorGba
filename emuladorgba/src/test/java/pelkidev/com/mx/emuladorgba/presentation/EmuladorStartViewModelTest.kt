@@ -190,6 +190,58 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun whenTheProgramWritesSound_theSamplesArePublished() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { directChannelProgram() }
+
+        assertEquals(0, viewModel.uiState.value.samples.size)
+        viewModel.onMachineTick()
+
+        assertArrayEquals(byteArrayOf(0x11, 0x22, 0x33, 0x44), viewModel.uiState.value.samples)
+    }
+
+    @Test
+    fun whenTheProgramDoesNotWriteSound_silenceIsPublished() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { paintRedAtOrigin() }
+
+        viewModel.onMachineTick()
+
+        assertEquals(0, viewModel.uiState.value.samples.size)
+    }
+
+    @Test
+    fun laterAdvanceWithoutWrites_publishesSilence() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { directChannelProgram() }
+        viewModel.onMachineTick()
+
+        viewModel.onMachineTick()
+
+        assertEquals(0, viewModel.uiState.value.samples.size)
+    }
+
+    @Test
+    fun anotherGba_startsInSilence() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { directChannelProgram() }
+        viewModel.onMachineTick()
+
+        viewModel.onFileChosen("otro.gba") { paintRedAtOrigin() }
+
+        assertEquals(0, viewModel.uiState.value.samples.size)
+    }
+
+    @Test
+    fun withoutARom_thereIsSilence() {
+        val viewModel = EmuladorStartViewModel()
+
+        viewModel.onMachineTick()
+
+        assertEquals(0, viewModel.uiState.value.samples.size)
+    }
+
+    @Test
     fun withoutARom_theMachineDoesNotRun() {
         val viewModel = EmuladorStartViewModel()
 
@@ -206,6 +258,14 @@ class EmuladorStartViewModelTest {
         clear.isAccessible = true
         clear.invoke(this)
     }
+
+    private fun directChannelProgram(): ByteArray = words(
+        0xE59F2008.toInt(),
+        0xE3A01404.toInt(),
+        0xE28110A0.toInt(),
+        0xE5812000.toInt(),
+        0x44332211,
+    )
 
     private fun paintRedAtOrigin(): ByteArray = words(
         0xE3A01406.toInt(),

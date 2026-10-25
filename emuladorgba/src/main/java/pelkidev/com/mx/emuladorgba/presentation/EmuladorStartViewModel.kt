@@ -20,6 +20,7 @@ data class EmuladorStartUiState(
     val loadedFileName: String? = null,
     val showInvalidFileMessage: Boolean = false,
     val frame: GbaFrame? = null,
+    val samples: ByteArray = byteArrayOf(),
 )
 
 class EmuladorStartViewModel : ViewModel() {
@@ -48,6 +49,7 @@ class EmuladorStartViewModel : ViewModel() {
                 loadedFileName = fileName.trim(),
                 showInvalidFileMessage = false,
                 frame = next.frame(),
+                samples = byteArrayOf(),
             )
         }
     }
@@ -56,12 +58,15 @@ class EmuladorStartViewModel : ViewModel() {
         val running = machine ?: return
         running.step()
         val next = running.frame()
+        val heard = running.samples()
         _uiState.update { state ->
             val current = state.frame
-            if (current != null && current.pixels.contentEquals(next.pixels)) {
-                state
-            } else {
-                state.copy(frame = next)
+            val sameFrame = current != null && current.pixels.contentEquals(next.pixels)
+            val sameSound = state.samples.contentEquals(heard)
+            when {
+                sameFrame && sameSound -> state
+                sameFrame -> state.copy(samples = heard)
+                else -> state.copy(frame = next, samples = heard)
             }
         }
     }
