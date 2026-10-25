@@ -4,7 +4,7 @@ private const val EWRAM_BASE = 0x02000000
 private const val IWRAM_BASE = 0x03000000
 private const val VRAM_BASE = 0x06000000
 private const val ROM_BASE = 0x08000000
-private const val INSTRUCTIONS_PER_STEP = 32
+private const val INSTRUCTIONS_PER_STEP = 50_000
 private const val BLACK = 0xFF000000.toInt()
 
 class GbaMachine(private val rom: ByteArray) {

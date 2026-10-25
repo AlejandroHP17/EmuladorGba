@@ -115,6 +115,27 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun skippedInstruction_replacesTheShownFrame() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") {
+            words(
+                0xE3A01406.toInt(),
+                0xE3A0201F.toInt(),
+                0xE1C120B0.toInt(),
+                0xFFFFFFFF.toInt(),
+                0xE1C120B2.toInt(),
+            )
+        }
+
+        viewModel.onMachineTick()
+
+        val frame = viewModel.uiState.value.frame!!
+        assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, frame.pixels.size)
+        assertEquals(RED, frame.pixel(0, 0))
+        assertEquals(RED, frame.pixel(1, 0))
+    }
+
+    @Test
     fun whenTheMachinePaints_theShownFrameIsReplaced() {
         val viewModel = EmuladorStartViewModel()
         viewModel.onFileChosen("juego.gba") { paintRedAtOrigin() }
