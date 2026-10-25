@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="pelkidev.com.mx.emuladorgba.domain.GbaFrameTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-25T15:37:54.738Z" hostname="Mac-mini-de-Alejandro.local" time="0.0">
+<testsuite name="pelkidev.com.mx.emuladorgba.domain.GbaFrameTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-25T15:56:40.827Z" hostname="Mac-mini-de-Alejandro.local" time="0.0">
   <properties/>
   <testcase name="pixel_isTheOneStoredAtThatPosition" classname="pelkidev.com.mx.emuladorgba.domain.GbaFrameTest" time="0.0"/>
   <testcase name="frame_measures240By160" classname="pelkidev.com.mx.emuladorgba.domain.GbaFrameTest" time="0.0"/>

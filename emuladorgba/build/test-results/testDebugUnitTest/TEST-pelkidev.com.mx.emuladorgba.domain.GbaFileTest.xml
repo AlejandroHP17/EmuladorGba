@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="pelkidev.com.mx.emuladorgba.domain.GbaFileTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-25T15:37:54.729Z" hostname="Mac-mini-de-Alejandro.local" time="0.007">
+<testsuite name="pelkidev.com.mx.emuladorgba.domain.GbaFileTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-25T15:56:40.817Z" hostname="Mac-mini-de-Alejandro.local" time="0.009">
   <properties/>
-  <testcase name="blankName_isNotAGbaFile" classname="pelkidev.com.mx.emuladorgba.domain.GbaFileTest" time="0.005"/>
+  <testcase name="blankName_isNotAGbaFile" classname="pelkidev.com.mx.emuladorgba.domain.GbaFileTest" time="0.006"/>
   <testcase name="extension_ignoresCase" classname="pelkidev.com.mx.emuladorgba.domain.GbaFileTest" time="0.0"/>
   <testcase name="otherExtension_isNotAGbaFile" classname="pelkidev.com.mx.emuladorgba.domain.GbaFileTest" time="0.0"/>
   <testcase name="nameEndingInGba_isAGbaFile" classname="pelkidev.com.mx.emuladorgba.domain.GbaFileTest" time="0.0"/>
