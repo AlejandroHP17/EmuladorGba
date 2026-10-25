@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,7 +26,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
 import pelkidev.com.mx.emuladorgba.R
 
 @Composable
@@ -44,14 +42,6 @@ fun EmuladorStartScreen(
         if (uri == null) return@rememberLauncherForActivityResult
         viewModel.onFileChosen(displayName(context, uri)) {
             context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-        }
-    }
-
-    LaunchedEffect(uiState.loadedFileName) {
-        if (uiState.loadedFileName == null) return@LaunchedEffect
-        while (true) {
-            delay(1_000)
-            viewModel.onSecondElapsed()
         }
     }
 
