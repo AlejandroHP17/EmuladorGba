@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-25T22:27:26.265Z" hostname="Mac-mini-de-Alejandro.local" time="0.101">
+  <properties/>
+  <testcase name="leaving_stopsTheObject" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.045"/>
+  <testcase name="object_replacesTheShownFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.04"/>
+  <testcase name="anotherGba_dropsThePreviousObject" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.014"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

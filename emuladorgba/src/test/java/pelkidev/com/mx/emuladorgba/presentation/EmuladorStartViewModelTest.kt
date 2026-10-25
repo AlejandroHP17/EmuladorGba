@@ -191,6 +191,45 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun object_replacesTheShownFrame() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { objectOverBackground() }
+        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(8, 0))
+
+        viewModel.onMachineTick()
+
+        val shown = viewModel.uiState.value.frame!!
+        assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, shown.pixels.size)
+        assertEquals(RED, shown.pixel(0, 0))
+        assertEquals(GREEN, shown.pixel(8, 0))
+        viewModel.onMachineTick()
+        assertTrue(viewModel.uiState.value.frame === shown)
+    }
+
+    @Test
+    fun anotherGba_dropsThePreviousObject() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { objectOverBackground() }
+        viewModel.onMachineTick()
+
+        viewModel.onFileChosen("otro.gba") { byteArrayOf(1) }
+
+        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(8, 0))
+        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(0, 0))
+    }
+
+    @Test
+    fun leaving_stopsTheObject() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") { objectOverBackground() }
+
+        viewModel.clear()
+        viewModel.onMachineTick()
+
+        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(8, 0))
+    }
+
+    @Test
     fun whenTheProgramWritesSound_theSamplesArePublished() {
         val viewModel = EmuladorStartViewModel()
         viewModel.onFileChosen("juego.gba") { directChannelProgram() }
@@ -398,6 +437,31 @@ class EmuladorStartViewModelTest {
         0x44332211,
     )
 
+    private fun objectOverBackground(): ByteArray = words(
+        0xE3A00404.toInt(),
+        0xE3A01C11.toInt(),
+        0xE1C010B0.toInt(),
+        0xE3A01C01.toInt(),
+        0xE1C010B8.toInt(),
+        0xE3A03405.toInt(),
+        0xE3A0201F.toInt(),
+        0xE1C320B2.toInt(),
+        0xE3A02FF8.toInt(),
+        0xE2833C02.toInt(),
+        0xE1C320B2.toInt(),
+        0xE3A04406.toInt(),
+        0xE3A02001.toInt(),
+        0xE1C420B0.toInt(),
+        0xE2844801.toInt(),
+        0xE2844020.toInt(),
+        0xE1C420B0.toInt(),
+        0xE3A05407.toInt(),
+        0xE3A02008.toInt(),
+        0xE1C520B2.toInt(),
+        0xE3A02001.toInt(),
+        0xE1C520B4.toInt(),
+    )
+
     private fun paintRedAtOrigin(): ByteArray = words(
         0xE3A01406.toInt(),
         0xE3A0201F.toInt(),
@@ -417,6 +481,7 @@ class EmuladorStartViewModelTest {
 
     private companion object {
         const val RED = 0xFFFF0000.toInt()
+        const val GREEN = 0xFF00FF00.toInt()
         const val BLACK = 0xFF000000.toInt()
     }
 }
