@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-25T20:31:19.466Z" hostname="Mac-mini-de-Alejandro.local" time="0.096">
+<testsuite name="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" tests="17" skipped="0" failures="0" errors="0" timestamp="2026-10-25T20:46:20.630Z" hostname="Mac-mini-de-Alejandro.local" time="0.092">
   <properties/>
   <testcase name="directCopy_paintsTheCopiedColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.009"/>
-  <testcase name="thumbAdd_paintsTheComputedColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.005"/>
-  <testcase name="unknownInstruction_isSkippedAndTheFrameStays" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.006"/>
+  <testcase name="thumbAdd_paintsTheComputedColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.006"/>
+  <testcase name="unknownInstruction_isSkippedAndTheFrameStays" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.002"/>
   <testcase name="jump_thenPaintsAKnownPixel" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.004"/>
   <testcase name="biosCopy_paintsTheCopiedColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.003"/>
   <testcase name="imageWrite_appearsAtThatPixelOfTheFrame" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.003"/>
   <testcase name="unknownThumbInstruction_isSkippedAndTheFollowingStorePaints" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.002"/>
-  <testcase name="emptyRom_staysBlank" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.002"/>
+  <testcase name="emptyRom_staysBlank" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.003"/>
+  <testcase name="unknownInstruction_keepsTheTiledBackground" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.021"/>
   <testcase name="syntheticProgram_paintsAKnownPixel" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.003"/>
-  <testcase name="laterBackgroundMemory_paintsTheKnownColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.024"/>
-  <testcase name="writeOutsideTheImage_staysBlack" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.001"/>
+  <testcase name="laterBackgroundMemory_paintsTheKnownColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.007"/>
+  <testcase name="writeOutsideTheImage_staysBlack" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.002"/>
   <testcase name="load_paintsTheValueReadFromTheProgram" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.002"/>
   <testcase name="biosExpand_paintsTheExpandedColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.002"/>
-  <testcase name="thumbStore_paintsAKnownPixel" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.004"/>
-  <testcase name="verticalBlank_runsTheInstalledHandler" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.01"/>
-  <testcase name="tiledBackground_paintsTheKnownColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.016"/>
+  <testcase name="thumbStore_paintsAKnownPixel" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.001"/>
+  <testcase name="verticalBlank_runsTheInstalledHandler" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.003"/>
+  <testcase name="tiledBackground_paintsTheKnownColor" classname="pelkidev.com.mx.emuladorgba.domain.GbaMachineTest" time="0.019"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

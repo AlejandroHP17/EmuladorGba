@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-25T20:31:19.573Z" hostname="Mac-mini-de-Alejandro.local" time="0.003">
+<testsuite name="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-25T20:46:20.730Z" hostname="Mac-mini-de-Alejandro.local" time="0.002">
   <properties/>
-  <testcase name="readableTitle_isDrawnInsteadOfTheFileName" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.001"/>
+  <testcase name="readableTitle_isDrawnInsteadOfTheFileName" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>
   <testcase name="emptyOrUnreadableTitle_hasNoTitle" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>
   <testcase name="title_isTheTwelveBytesStoredInTheHeader" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>
-  <testcase name="emptyOrUnreadableTitle_drawsTheFileName" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.002"/>
+  <testcase name="emptyOrUnreadableTitle_drawsTheFileName" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.001"/>
   <testcase name="trailingNulls_areNotPartOfTheTitle" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>
   <testcase name="trailingSpaces_areNotPartOfTheTitle" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>
   <testcase name="anotherHeader_hasItsOwnTitle" classname="pelkidev.com.mx.emuladorgba.domain.RomTitleTest" time="0.0"/>

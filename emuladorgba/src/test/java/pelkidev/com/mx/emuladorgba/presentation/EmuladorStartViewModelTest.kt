@@ -136,6 +136,35 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun tiledBackground_replacesTheShownFrame() {
+        val viewModel = EmuladorStartViewModel()
+        viewModel.onFileChosen("juego.gba") {
+            words(
+                0xE3A00404.toInt(),
+                0xE3A01C01.toInt(),
+                0xE1C010B0.toInt(),
+                0xE1C010B8.toInt(),
+                0xE3A03405.toInt(),
+                0xE3A0201F.toInt(),
+                0xE1C320B2.toInt(),
+                0xE3A04406.toInt(),
+                0xE3A02001.toInt(),
+                0xE1C420B0.toInt(),
+            )
+        }
+        assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(0, 0))
+
+        viewModel.onMachineTick()
+
+        val shown = viewModel.uiState.value.frame!!
+        assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, shown.pixels.size)
+        assertEquals(RED, shown.pixel(0, 0))
+        assertEquals(BLACK, shown.pixel(1, 0))
+        viewModel.onMachineTick()
+        assertTrue(viewModel.uiState.value.frame === shown)
+    }
+
+    @Test
     fun whenTheMachinePaints_theShownFrameIsReplaced() {
         val viewModel = EmuladorStartViewModel()
         viewModel.onFileChosen("juego.gba") { paintRedAtOrigin() }
