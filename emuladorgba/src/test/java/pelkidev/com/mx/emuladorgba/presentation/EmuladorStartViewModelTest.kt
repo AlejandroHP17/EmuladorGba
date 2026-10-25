@@ -8,6 +8,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import pelkidev.com.mx.emuladorgba.data.GbaCore
 import pelkidev.com.mx.emuladorgba.domain.GbaButton
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 import pelkidev.com.mx.emuladorgba.domain.GbaMachine
@@ -16,7 +17,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun otherExtension_doesNotLoadAndAsksForGba() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
 
         viewModel.onFileChosen("notas.txt") { byteArrayOf(1) }
 
@@ -28,7 +29,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun otherExtension_keepsTheTitleAlreadyShown() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         val rom = ByteArray(0xA0 + 12)
         "ZELDA       ".toByteArray(Charsets.US_ASCII).copyInto(rom, destinationOffset = 0xA0)
         viewModel.onFileChosen("juego.gba") { rom }
@@ -45,7 +46,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun gbaFile_keepsTheBytesForThisSession() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         val rom = byteArrayOf(4, 5, 6)
 
         viewModel.onFileChosen("otro.GBA") { rom }
@@ -61,7 +62,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun gbaFile_buildsTheFrameFromTheRomBytes() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         val rom = ByteArray(0xA0 + 12)
         "TETRIS      ".toByteArray(Charsets.US_ASCII).copyInto(rom, destinationOffset = 0xA0)
 
@@ -72,7 +73,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun unreadGba_keepsThePreviousSession() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         val rom = byteArrayOf(7)
         viewModel.onFileChosen("juego.gba") { rom }
         val frame = viewModel.uiState.value.frame
@@ -86,14 +87,14 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun withoutAGba_thereIsNoFrame() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
 
         assertNull(viewModel.uiState.value.frame)
     }
 
     @Test
     fun anotherGba_replacesTheFrame() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
         val first = viewModel.uiState.value.frame
 
@@ -106,7 +107,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun loadedGba_showsTheMachineFrame() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         val rom = paintRedAtOrigin()
 
         viewModel.onFileChosen("juego.gba") { rom }
@@ -117,7 +118,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun skippedInstruction_replacesTheShownFrame() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") {
             words(
                 0xE3A01406.toInt(),
@@ -138,7 +139,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun tiledBackground_replacesTheShownFrame() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") {
             words(
                 0xE3A00404.toInt(),
@@ -167,7 +168,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun whenTheMachinePaints_theShownFrameIsReplaced() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { paintRedAtOrigin() }
 
         viewModel.onMachineTick()
@@ -180,7 +181,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun leaving_stopsTheAdvance() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { paintRedAtOrigin() }
 
         viewModel.clear()
@@ -192,7 +193,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun object_replacesTheShownFrame() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { objectOverBackground() }
         assertEquals(BLACK, viewModel.uiState.value.frame!!.pixel(8, 0))
 
@@ -208,7 +209,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun waiting_replacesThePictureWithoutAControl() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { movingPicture() }
         val initial = viewModel.uiState.value.frame!!
 
@@ -224,7 +225,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun anotherGba_dropsThePreviousMovement() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { movingPicture() }
         viewModel.onMachineTick()
         viewModel.onMachineTick()
@@ -240,7 +241,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun leaving_stopsTheMovement() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { movingPicture() }
         viewModel.onMachineTick()
         val moving = viewModel.uiState.value.frame
@@ -253,7 +254,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun anotherGba_dropsThePreviousObject() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { objectOverBackground() }
         viewModel.onMachineTick()
 
@@ -265,7 +266,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun leaving_stopsTheObject() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { objectOverBackground() }
 
         viewModel.clear()
@@ -276,7 +277,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun whenTheProgramWritesSound_theSamplesArePublished() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { directChannelProgram() }
 
         assertEquals(0, viewModel.uiState.value.samples.size)
@@ -287,7 +288,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun whenTheProgramDoesNotWriteSound_silenceIsPublished() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { paintRedAtOrigin() }
 
         viewModel.onMachineTick()
@@ -297,7 +298,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun repeatedSound_isPublishedAgain() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { loopingDirectChannel() }
         viewModel.onMachineTick()
         viewModel.onMachineTick()
@@ -320,7 +321,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun laterAdvanceWithoutWrites_publishesSilence() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { directChannelProgram() }
         viewModel.onMachineTick()
 
@@ -331,7 +332,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun anotherGba_startsInSilence() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { directChannelProgram() }
         viewModel.onMachineTick()
 
@@ -342,7 +343,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun anotherGba_replacesThePreviousSound() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { directChannelProgram() }
         viewModel.onMachineTick()
 
@@ -355,7 +356,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun leaving_cutsTheSound() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { directChannelProgram() }
         viewModel.onMachineTick()
 
@@ -367,7 +368,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun withoutARom_thereIsSilence() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
 
         viewModel.onMachineTick()
 
@@ -376,7 +377,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun heldControl_reachesTheProgram() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { readControls() }
         viewModel.onControlChanged(GbaButton.A, true)
 
@@ -387,7 +388,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun twoHeldControls_bothReachTheProgram() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { readControls() }
         viewModel.onControlChanged(GbaButton.A, true)
         viewModel.onControlChanged(GbaButton.B, true)
@@ -402,7 +403,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun releasedControl_noLongerReachesTheProgram() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { readControls() }
         viewModel.onControlChanged(GbaButton.A, true)
         viewModel.onMachineTick()
@@ -415,7 +416,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun withoutARom_aControlDoesNothing() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
 
         viewModel.onControlChanged(GbaButton.A, true)
 
@@ -424,7 +425,7 @@ class EmuladorStartViewModelTest {
 
     @Test
     fun withoutARom_theMachineDoesNotRun() {
-        val viewModel = EmuladorStartViewModel()
+        val viewModel = newViewModel()
 
         repeat(3) { viewModel.onMachineTick() }
         viewModel.onFileChosen("notas.txt") { byteArrayOf(1) }
@@ -432,6 +433,62 @@ class EmuladorStartViewModelTest {
 
         assertNull(viewModel.loadedRom)
         assertNull(viewModel.uiState.value.frame)
+    }
+
+    @Test
+    fun coreThatCannotLoad_keepsThePreviousSession() {
+        var failing = false
+        val viewModel = EmuladorStartViewModel(
+            startCore = { rom ->
+                check(!failing) { "no carga" }
+                MachineCore(GbaMachine(rom))
+            },
+            autoAdvance = false,
+        )
+        val rom = byteArrayOf(7)
+        viewModel.onFileChosen("juego.gba") { rom }
+        val frame = viewModel.uiState.value.frame
+
+        failing = true
+        viewModel.onFileChosen("roto.gba") { byteArrayOf(1) }
+
+        assertEquals("juego.gba", viewModel.uiState.value.loadedFileName)
+        assertArrayEquals(rom, viewModel.loadedRom)
+        assertTrue(viewModel.uiState.value.frame === frame)
+    }
+
+    @Test
+    fun anotherGba_closesThePreviousCore() {
+        val cores = mutableListOf<MachineCore>()
+        val viewModel = EmuladorStartViewModel(
+            startCore = { rom -> MachineCore(GbaMachine(rom)).also(cores::add) },
+            autoAdvance = false,
+        )
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+
+        viewModel.onFileChosen("otro.gba") { byteArrayOf(2) }
+        viewModel.clear()
+
+        assertTrue(cores[0].closed)
+        assertTrue(cores[1].closed)
+    }
+
+    private fun newViewModel() = EmuladorStartViewModel(
+        startCore = { rom -> MachineCore(GbaMachine(rom)) },
+        autoAdvance = false,
+    )
+
+    private class MachineCore(private val machine: GbaMachine) : GbaCore {
+        var closed = false
+            private set
+
+        override fun step() = machine.step()
+        override fun frame(): GbaFrame = machine.frame()
+        override fun samples(): ByteArray = machine.samples()
+        override fun hold(buttons: Set<GbaButton>) = machine.hold(buttons)
+        override fun close() {
+            closed = true
+        }
     }
 
     private fun ViewModel.clear() {

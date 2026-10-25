@@ -12,7 +12,7 @@ interface GbaCore {
 }
 
 class MgbaCore(rom: ByteArray) : GbaCore {
-    private val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT)
+    private val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT) { BLACK }
     private var handle: Long = nativeCreate(rom)
 
     init {
@@ -41,6 +41,8 @@ class MgbaCore(rom: ByteArray) : GbaCore {
     private external fun nativeDestroy(handle: Long)
 
     private companion object {
+        const val BLACK = 0xFF000000.toInt()
+
         init {
             System.loadLibrary("emuladorgba_mgba")
         }
