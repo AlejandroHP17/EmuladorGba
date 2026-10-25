@@ -3,6 +3,7 @@ package pelkidev.com.mx.emuladorgba.domain
 private const val IO_BASE = 0x04000000
 private const val EWRAM_BASE = 0x02000000
 private const val IWRAM_BASE = 0x03000000
+private const val PALETTE_BASE = 0x05000000
 private const val VRAM_BASE = 0x06000000
 private const val ROM_BASE = 0x08000000
 private const val INSTRUCTIONS_PER_STEP = 50_000
@@ -13,15 +14,25 @@ class GbaMachine(private val rom: ByteArray) {
     private val ewram = ByteArray(256 * 1024)
     private val iwram = ByteArray(32 * 1024)
     private val io = ByteArray(0x400)
+    private val palette = ByteArray(0x200)
     private val vram = ByteArray(GbaFrame.WIDTH * GbaFrame.HEIGHT * 2)
     private var pc = ROM_BASE
     private var thumb = false
     private var scanline = 0
+    private val save = ByteArray(64 * 1024) { 0xFF.toByte() }
+    private var saveMode = 0
+    private var saveStep = 0
     private var transferring = false
+    private var servingBlank = false
     private var flagN = false
     private var flagZ = false
     private var flagC = false
     private var flagV = false
+
+    init {
+        io[0x130] = 0xFF.toByte()
+        io[0x131] = 0x03
+    }
 
     fun step() {
         repeat(INSTRUCTIONS_PER_STEP) {
@@ -30,12 +41,78 @@ class GbaMachine(private val rom: ByteArray) {
     }
 
     fun frame(): GbaFrame {
+        val display = readHalf(IO_BASE)
+        val enabled = (display ushr 8) and 0xF
+        if ((display and 7) != 0 || enabled == 0) return photoFrame()
+        val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT) { rgb555(readHalf(PALETTE_BASE)) }
+        (0..3).filter { (enabled ushr it) and 1 == 1 }
+            .sortedWith(compareByDescending<Int> { readHalf(0x04000008 + it * 2) and 3 }.thenByDescending { it })
+            .forEach { paintBackground(it, pixels) }
+        return GbaFrame(pixels)
+    }
+
+    private fun photoFrame(): GbaFrame {
         val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT) { index ->
             val lo = vram[index * 2].toInt() and 0xFF
             val hi = vram[index * 2 + 1].toInt() and 0xFF
             rgb555(lo or (hi shl 8))
         }
         return GbaFrame(pixels)
+    }
+
+    private fun paintBackground(background: Int, pixels: IntArray) {
+        val control = readHalf(0x04000008 + background * 2)
+        val eightBit = control and 0x80 != 0
+        val charBase = ((control ushr 2) and 3) * 0x4000
+        val screenBase = ((control ushr 8) and 0x1F) * 0x800
+        val wide = (control ushr 14) and 1 == 1
+        val tall = (control ushr 15) and 1 == 1
+        val tilesWide = if (wide) 64 else 32
+        val tilesTall = if (tall) 64 else 32
+        val scrollX = readHalf(0x04000010 + background * 4) and 0x1FF
+        val scrollY = readHalf(0x04000012 + background * 4) and 0x1FF
+        for (y in 0 until GbaFrame.HEIGHT) {
+            val mapY = (y + scrollY) and (tilesTall * 8 - 1)
+            for (x in 0 until GbaFrame.WIDTH) {
+                val mapX = (x + scrollX) and (tilesWide * 8 - 1)
+                val color = backgroundColor(eightBit, charBase, screenBase, wide, mapX, mapY) ?: continue
+                pixels[y * GbaFrame.WIDTH + x] = color
+            }
+        }
+    }
+
+    private fun backgroundColor(
+        eightBit: Boolean,
+        charBase: Int,
+        screenBase: Int,
+        wide: Boolean,
+        mapX: Int,
+        mapY: Int,
+    ): Int? {
+        val tileColumn = mapX ushr 3
+        val tileRow = mapY ushr 3
+        val block = (tileRow ushr 5) * (if (wide) 2 else 1) + (tileColumn ushr 5)
+        val entryAddress = VRAM_BASE + screenBase + block * 0x800 +
+            ((tileRow and 31) * 32 + (tileColumn and 31)) * 2
+        val entry = readHalf(entryAddress)
+        var pixelX = mapX and 7
+        var pixelY = mapY and 7
+        if (entry and 0x400 != 0) pixelX = 7 - pixelX
+        if (entry and 0x800 != 0) pixelY = 7 - pixelY
+        val tile = entry and 0x3FF
+        val index = if (eightBit) {
+            readByte(VRAM_BASE + charBase + tile * 64 + pixelY * 8 + pixelX)
+        } else {
+            val packed = readByte(VRAM_BASE + charBase + tile * 32 + pixelY * 4 + (pixelX ushr 1))
+            if (pixelX and 1 == 0) packed and 0xF else (packed ushr 4) and 0xF
+        }
+        if (index == 0) return null
+        val colorAddress = if (eightBit) {
+            PALETTE_BASE + index * 2
+        } else {
+            PALETTE_BASE + (((entry ushr 12) and 0xF) * 16 + index) * 2
+        }
+        return rgb555(readHalf(colorAddress))
     }
 
     private fun executeOne() {
@@ -371,6 +448,7 @@ class GbaMachine(private val rom: ByteArray) {
             scanline += 1
             return line
         }
+        if (address in 0x0E000000 until 0x0E010000) return readSave(address)
         val memory = memoryAt(address) ?: return 0
         val offset = address - memory.base
         if (offset !in memory.bytes.indices) return 0
@@ -390,7 +468,68 @@ class GbaMachine(private val rom: ByteArray) {
         directCopy(address + 2)
     }
 
+    private fun readSave(address: Int): Int {
+        val offset = address - 0x0E000000
+        if (saveMode == 1) {
+            return when (offset) {
+                0 -> 0xBF
+                1 -> 0xD4
+                else -> 0xFF
+            }
+        }
+        return save[offset].toInt() and 0xFF
+    }
+
+    private fun writeSave(address: Int, value: Int) {
+        val offset = address - 0x0E000000
+        if (offset !in save.indices) return
+        val byte = value and 0xFF
+        val port = offset and 0xFFFF
+        if (byte == 0xF0 && saveStep != 4) {
+            saveMode = 0
+            saveStep = 0
+            return
+        }
+        when (saveStep) {
+            0 -> if (port == 0x5555 && byte == 0xAA) saveStep = 1
+            1 -> saveStep = if (port == 0x2AAA && byte == 0x55) 2 else 0
+            2 -> {
+                saveStep = 0
+                when {
+                    byte == 0x90 && port == 0x5555 -> saveMode = 1
+                    byte == 0xF0 -> saveMode = 0
+                    byte == 0xA0 && port == 0x5555 -> saveStep = 4
+                    byte == 0x80 && port == 0x5555 -> saveStep = 5
+                }
+            }
+            4 -> {
+                save[offset] = (save[offset].toInt() and byte).toByte()
+                saveMode = 0
+                saveStep = 0
+            }
+            5 -> saveStep = if (port == 0x5555 && byte == 0xAA) 6 else 0
+            6 -> saveStep = if (port == 0x2AAA && byte == 0x55) 7 else 0
+            else -> {
+                saveStep = 0
+                saveMode = 0
+                when {
+                    byte == 0x10 && port == 0x5555 -> save.fill(0xFF.toByte())
+                    byte == 0x30 -> {
+                        val start = offset and 0xFFF.inv()
+                        for (index in start until (start + 4096).coerceAtMost(save.size)) {
+                            save[index] = 0xFF.toByte()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun writeByte(address: Int, value: Int) {
+        if (address in 0x0E000000 until 0x0E010000) {
+            writeSave(address, value)
+            return
+        }
         val memory = memoryAt(address) ?: return
         if (!memory.writable) return
         val offset = address - memory.base
@@ -459,6 +598,7 @@ class GbaMachine(private val rom: ByteArray) {
         address in IO_BASE until IO_BASE + io.size -> Memory(IO_BASE, io, writable = true)
         address in EWRAM_BASE until EWRAM_BASE + ewram.size -> Memory(EWRAM_BASE, ewram, writable = true)
         address in IWRAM_BASE until IWRAM_BASE + iwram.size -> Memory(IWRAM_BASE, iwram, writable = true)
+        address in PALETTE_BASE until PALETTE_BASE + palette.size -> Memory(PALETTE_BASE, palette, writable = true)
         address in VRAM_BASE until VRAM_BASE + vram.size -> Memory(VRAM_BASE, vram, writable = true)
         address in ROM_BASE until ROM_BASE + rom.size -> Memory(ROM_BASE, rom, writable = false)
         else -> null
@@ -466,11 +606,41 @@ class GbaMachine(private val rom: ByteArray) {
 
     private fun softwareInterrupt(number: Int) {
         when (number) {
-            0x05 -> copyOnVerticalBlank()
+            0x05 -> serviceVerticalBlank()
             0x0B -> cpuTransfer(words = (registers[2] ushr 26) and 1 == 1, fill = (registers[2] ushr 24) and 1 == 1, count = registers[2] and 0x1FFFFF)
             0x0C -> cpuTransfer(words = true, fill = (registers[2] ushr 24) and 1 == 1, count = (registers[2] and 0x1FFFFF) + 7 and 7.inv())
             0x11, 0x12 -> lz77(registers[0], registers[1])
         }
+    }
+
+    private fun serviceVerticalBlank() {
+        copyOnVerticalBlank()
+        if (servingBlank) return
+        val handler = readWord(0x03004F80)
+        if (handler == 0) return
+        servingBlank = true
+        val savedPc = pc
+        val savedThumb = thumb
+        val saved = registers.copyOf()
+        val savedN = flagN
+        val savedZ = flagZ
+        val savedC = flagC
+        val savedV = flagV
+        registers[14] = 0x01FFFFFC
+        jump(handler)
+        var guard = 0
+        while (pc != 0x01FFFFFC && guard < 8_000) {
+            executeOne()
+            guard += 1
+        }
+        pc = savedPc
+        thumb = savedThumb
+        saved.copyInto(registers)
+        flagN = savedN
+        flagZ = savedZ
+        flagC = savedC
+        flagV = savedV
+        servingBlank = false
     }
 
     private fun copyOnVerticalBlank() {

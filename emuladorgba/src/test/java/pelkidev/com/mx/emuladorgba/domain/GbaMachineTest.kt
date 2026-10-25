@@ -204,6 +204,56 @@ class GbaMachineTest {
     }
 
     @Test
+    fun verticalBlank_runsTheInstalledHandler() {
+        val machine = GbaMachine(
+            words(
+                0xE3A00408.toInt(),
+                0xE2800021.toInt(),
+                0xE3A01403.toInt(),
+                0xE2811C4F.toInt(),
+                0xE2811080.toInt(),
+                0xE5810000.toInt(),
+                0xEF000005.toInt(),
+                0xEAFFFFFE.toInt(),
+            ) + byteArrayOf(
+                0x01, 0x49,
+                0x1F, 0x20,
+                0x08, 0x80.toByte(),
+                0x70, 0x47,
+                0x00, 0x00, 0x00, 0x06,
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(RED, machine.frame().pixel(0, 0))
+    }
+
+    @Test
+    fun tiledBackground_paintsTheKnownColor() {
+        val machine = GbaMachine(
+            words(
+                0xE3A00404.toInt(),
+                0xE3A01C01.toInt(),
+                0xE1C010B0.toInt(),
+                0xE1C010B8.toInt(),
+                0xE3A03405.toInt(),
+                0xE3A0201F.toInt(),
+                0xE1C320B2.toInt(),
+                0xE3A04406.toInt(),
+                0xE3A02001.toInt(),
+                0xE1C420B0.toInt(),
+            ),
+        )
+
+        machine.step()
+
+        assertEquals(GbaFrame.WIDTH * GbaFrame.HEIGHT, machine.frame().pixels.size)
+        assertEquals(RED, machine.frame().pixel(0, 0))
+        assertEquals(BLACK, machine.frame().pixel(1, 0))
+    }
+
+    @Test
     fun emptyRom_staysBlank() {
         val machine = GbaMachine(ByteArray(0))
 

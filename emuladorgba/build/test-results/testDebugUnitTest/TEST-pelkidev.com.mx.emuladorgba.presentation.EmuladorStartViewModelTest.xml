@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-25T20:20:07.022Z" hostname="Mac-mini-de-Alejandro.local" time="0.523">
+  <properties/>
+  <testcase name="otherExtension_keepsTheTitleAlreadyShown" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.127"/>
+  <testcase name="loadedGba_showsTheMachineFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.004"/>
+  <testcase name="withoutAGba_thereIsNoFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.002"/>
+  <testcase name="gbaFile_buildsTheFrameFromTheRomBytes" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.004"/>
+  <testcase name="leaving_stopsTheAdvance" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.362"/>
+  <testcase name="whenTheMachinePaints_theShownFrameIsReplaced" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.008"/>
+  <testcase name="gbaFile_keepsTheBytesForThisSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.002"/>
+  <testcase name="unreadGba_keepsThePreviousSession" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
+  <testcase name="otherExtension_doesNotLoadAndAsksForGba" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
+  <testcase name="anotherGba_replacesTheFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.005"/>
+  <testcase name="skippedInstruction_replacesTheShownFrame" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.004"/>
+  <testcase name="withoutARom_theMachineDoesNotRun" classname="pelkidev.com.mx.emuladorgba.presentation.EmuladorStartViewModelTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
