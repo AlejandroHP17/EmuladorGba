@@ -59,8 +59,13 @@ fun EmuladorStartScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val frame = viewModel.frame.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val previousOrientation = remember { intArrayOf(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) }
     DisposableEffect(Unit) {
-        context.findActivity()?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        val activity = context.findActivity()
+        if (activity != null) {
+            previousOrientation[0] = activity.requestedOrientation
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
         onDispose { }
     }
     val lifecycleOwner = LocalLifecycleOwner.current
