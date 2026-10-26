@@ -18,7 +18,7 @@ class MgbaCore(rom: ByteArray) : GbaCore {
     private val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT) { BLACK }
     private val pcm = ShortArray(AUDIO_BUFFER_SAMPLES * 2)
     private var handle: Long = nativeCreate(rom)
-    private val track = openTrack()
+    private var track = openTrack()
 
     @Volatile
     private var keys = 0
@@ -52,6 +52,12 @@ class MgbaCore(rom: ByteArray) : GbaCore {
     }
 
     override fun close() {
+        track?.let { playing ->
+            if (playing.playState == AudioTrack.PLAYSTATE_PLAYING) playing.pause()
+            playing.flush()
+            playing.release()
+        }
+        track = null
         if (handle == 0L) return
         nativeDestroy(handle)
         handle = 0L
