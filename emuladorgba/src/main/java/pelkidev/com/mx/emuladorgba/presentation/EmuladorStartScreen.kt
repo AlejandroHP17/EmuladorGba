@@ -18,7 +18,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -144,9 +143,7 @@ fun EmuladorStartScreen(
                         modifier = Modifier.fillMaxSize(),
                     )
                     GbaControls(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 8.dp),
+                        modifier = Modifier.fillMaxSize(),
                         onChanged = viewModel::onControlChanged,
                     )
                 }
@@ -160,37 +157,43 @@ private fun GbaControls(
     onChanged: (GbaButton, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Control("L", GbaButton.L, onChanged)
-            Control("R", GbaButton.R, onChanged)
+    Box(modifier = modifier.padding(8.dp)) {
+        Control(
+            "L",
+            GbaButton.L,
+            onChanged,
+            Modifier.align(Alignment.TopStart),
+        )
+        Control(
+            "R",
+            GbaButton.R,
+            onChanged,
+            Modifier.align(Alignment.TopEnd),
+        )
+        Dpad(
+            onChanged,
+            Modifier.align(Alignment.CenterStart),
+        )
+        Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+            Control("B", GbaButton.B, onChanged)
+            Control("A", GbaButton.A, onChanged)
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Dpad(onChanged)
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Control("Select", GbaButton.SELECT, onChanged)
-                Control("Start", GbaButton.START, onChanged)
-            }
-            Row {
-                Control("B", GbaButton.B, onChanged)
-                Control("A", GbaButton.A, onChanged)
-            }
+        Row(modifier = Modifier.align(Alignment.BottomCenter)) {
+            Control("Select", GbaButton.SELECT, onChanged)
+            Control("Start", GbaButton.START, onChanged)
         }
     }
 }
 
 @Composable
-private fun Dpad(onChanged: (GbaButton, Boolean) -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun Dpad(
+    onChanged: (GbaButton, Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Control("↑", GbaButton.UP, onChanged)
         Row {
             Control("←", GbaButton.LEFT, onChanged)
@@ -205,13 +208,14 @@ private fun Control(
     label: String,
     button: GbaButton,
     onChanged: (GbaButton, Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     DisposableEffect(button) {
         onDispose { onChanged(button, false) }
     }
     Text(
         text = label,
-        modifier = Modifier
+        modifier = modifier
             .pointerInput(button) {
                 awaitEachGesture {
                     awaitFirstDown()
