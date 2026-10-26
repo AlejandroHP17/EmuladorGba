@@ -174,14 +174,16 @@ private fun GbaControls(
             GbaButton.L,
             onChanged,
             Modifier.align(Alignment.TopStart),
-            style = ControlStyle.Shoulder,
+            style = ControlStyle.Face,
+            fill = FaceShoulder,
         )
         Control(
             "R",
             GbaButton.R,
             onChanged,
             Modifier.align(Alignment.TopEnd),
-            style = ControlStyle.Shoulder,
+            style = ControlStyle.Face,
+            fill = FaceShoulder,
         )
         Dpad(
             onChanged,
@@ -234,21 +236,19 @@ private fun Dpad(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Control("↑", GbaButton.UP, onChanged, style = ControlStyle.Direction)
+        Control("↑", GbaButton.UP, onChanged, style = ControlStyle.Face)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Control("←", GbaButton.LEFT, onChanged, style = ControlStyle.Direction)
-            Box(modifier = Modifier.size(20.dp))
-            Control("→", GbaButton.RIGHT, onChanged, style = ControlStyle.Direction)
+            Control("←", GbaButton.LEFT, onChanged, style = ControlStyle.Face)
+            Box(modifier = Modifier.size(12.dp))
+            Control("→", GbaButton.RIGHT, onChanged, style = ControlStyle.Face)
         }
-        Control("↓", GbaButton.DOWN, onChanged, style = ControlStyle.Direction)
+        Control("↓", GbaButton.DOWN, onChanged, style = ControlStyle.Face)
     }
 }
 
 private enum class ControlStyle {
     Face,
-    Shoulder,
     Menu,
-    Direction,
 }
 
 @Composable
@@ -301,14 +301,13 @@ private data class ControlLook(
 
 private fun ControlStyle.look(): ControlLook = when (this) {
     ControlStyle.Face -> ControlLook(72.dp, 72.dp, CircleShape, 22.sp)
-    ControlStyle.Shoulder -> ControlLook(84.dp, 48.dp, RoundedCornerShape(percent = 50), 18.sp)
     ControlStyle.Menu -> ControlLook(88.dp, 40.dp, RoundedCornerShape(percent = 50), 13.sp)
-    ControlStyle.Direction -> ControlLook(56.dp, 56.dp, RoundedCornerShape(12.dp), 20.sp)
 }
 
 private val PadFill = Color.White.copy(alpha = 0.28f)
 private val FaceA = Color(0xCC3D8BFF)
 private val FaceB = Color(0xCCFF5A5A)
+private val FaceShoulder = Color(0xCC6E7A90)
 
 @Composable
 private fun GbaSpeaker(samples: ByteArray) {
