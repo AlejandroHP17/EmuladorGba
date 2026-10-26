@@ -78,7 +78,7 @@ Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeRunFrame(
     struct Machine* machine = (struct Machine*) (intptr_t) handle;
     if (!machine) return;
     struct mCore* core = machine->core;
-    (void) keys;
+    core->setKeys(core, (uint32_t) keys);
     core->runFrame(core);
     blip_clear(core->getAudioChannel(core, 0));
     blip_clear(core->getAudioChannel(core, 1));
