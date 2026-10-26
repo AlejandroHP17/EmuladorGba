@@ -131,17 +131,23 @@ fun EmuladorStartScreen(
                 )
             }
             if (uiState.loadedFileName != null) {
-                GbaScreen(
-                    frame = { frame.value },
+                Box(
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                         .weight(1f),
-                )
-                GbaControls(
-                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
-                    onChanged = viewModel::onControlChanged,
-                )
+                ) {
+                    GbaScreen(
+                        frame = { frame.value },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    GbaControls(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 8.dp),
+                        onChanged = viewModel::onControlChanged,
+                    )
+                }
             }
         }
     }
