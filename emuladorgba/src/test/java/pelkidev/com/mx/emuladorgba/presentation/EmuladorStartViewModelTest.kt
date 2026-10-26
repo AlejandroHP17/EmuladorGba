@@ -470,6 +470,24 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun leave_stopsTheCoreAndKeepsTheLastFrame() {
+        val cores = mutableListOf<MachineCore>()
+        val viewModel = EmuladorStartViewModel(
+            startCore = { rom -> MachineCore(GbaMachine(rom)).also(cores::add) },
+            autoAdvance = false,
+        )
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        viewModel.onMachineTick()
+        val frame = viewModel.frame.value
+
+        viewModel.onLeave()
+        viewModel.onMachineTick()
+
+        assertTrue(cores[0].closed)
+        assertTrue(viewModel.frame.value === frame)
+    }
+
+    @Test
     fun anotherGba_closesThePreviousCore() {
         val cores = mutableListOf<MachineCore>()
         val viewModel = EmuladorStartViewModel(

@@ -129,7 +129,10 @@ fun EmuladorStartScreen(
             }
         }
         TextButton(
-            onClick = onExit,
+            onClick = {
+                viewModel.onLeave()
+                onExit()
+            },
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .statusBarsPadding()

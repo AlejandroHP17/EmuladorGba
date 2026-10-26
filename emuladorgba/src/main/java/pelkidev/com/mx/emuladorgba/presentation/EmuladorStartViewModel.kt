@@ -141,14 +141,20 @@ class EmuladorStartViewModel(
         }
     }
 
-    override fun onCleared() {
-        tickerScope.cancel()
+    fun onLeave() {
+        ticker?.cancel()
         ticker = null
+        paused = true
         synchronized(coreLock) {
             machine?.close()
             machine = null
         }
         _uiState.update { it.copy(samples = byteArrayOf()) }
+    }
+
+    override fun onCleared() {
+        tickerScope.cancel()
+        onLeave()
         super.onCleared()
     }
 
