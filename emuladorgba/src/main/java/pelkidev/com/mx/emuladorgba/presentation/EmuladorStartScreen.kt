@@ -187,10 +187,10 @@ private fun GbaControls(
         )
         Dpad(
             onChanged,
-            Modifier.align(Alignment.CenterStart),
+            Modifier.align(Alignment.BottomStart),
         )
         Row(
-            modifier = Modifier.align(Alignment.CenterEnd),
+            modifier = Modifier.align(Alignment.BottomEnd),
             verticalAlignment = Alignment.Top,
         ) {
             Control(
@@ -236,13 +236,13 @@ private fun Dpad(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Control("↑", GbaButton.UP, onChanged, style = ControlStyle.Face)
+        Control("↑", GbaButton.UP, onChanged, style = ControlStyle.Face, fill = FacePad)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Control("←", GbaButton.LEFT, onChanged, style = ControlStyle.Face)
+            Control("←", GbaButton.LEFT, onChanged, style = ControlStyle.Face, fill = FacePad)
             Box(modifier = Modifier.size(12.dp))
-            Control("→", GbaButton.RIGHT, onChanged, style = ControlStyle.Face)
+            Control("→", GbaButton.RIGHT, onChanged, style = ControlStyle.Face, fill = FacePad)
         }
-        Control("↓", GbaButton.DOWN, onChanged, style = ControlStyle.Face)
+        Control("↓", GbaButton.DOWN, onChanged, style = ControlStyle.Face, fill = FacePad)
     }
 }
 
@@ -308,6 +308,7 @@ private val PadFill = Color.White.copy(alpha = 0.28f)
 private val FaceA = Color(0xCC3D8BFF)
 private val FaceB = Color(0xCCFF5A5A)
 private val FaceShoulder = Color(0xCC6E7A90)
+private val FacePad = Color(0xE65A6478)
 
 @Composable
 private fun GbaSpeaker(samples: ByteArray) {
