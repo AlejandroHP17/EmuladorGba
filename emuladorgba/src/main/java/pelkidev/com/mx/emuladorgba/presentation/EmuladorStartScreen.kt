@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.provider.OpenableColumns
 import java.util.concurrent.atomic.AtomicBoolean
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -29,7 +30,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -74,6 +74,10 @@ fun EmuladorStartScreen(
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    BackHandler {
+        viewModel.onLeave()
+        onExit()
     }
     GbaSpeaker(uiState.samples)
     val pickGbaFile = rememberLauncherForActivityResult(
@@ -134,18 +138,6 @@ fun EmuladorStartScreen(
                     onChanged = viewModel::onControlChanged,
                 )
             }
-        }
-        TextButton(
-            onClick = {
-                viewModel.onLeave()
-                onExit()
-            },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .padding(8.dp),
-        ) {
-            Text("Atrás")
         }
     }
 }
