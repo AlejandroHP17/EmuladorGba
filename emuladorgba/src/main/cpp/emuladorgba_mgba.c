@@ -73,10 +73,12 @@ Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeCreate(JNIEnv* env, jobject
 }
 
 JNIEXPORT void JNICALL
-Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeRunFrame(JNIEnv* env, jobject thiz, jlong handle, jintArray out) {
+Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeRunFrame(
+        JNIEnv* env, jobject thiz, jlong handle, jintArray out, jint keys) {
     struct Machine* machine = (struct Machine*) (intptr_t) handle;
     if (!machine) return;
     struct mCore* core = machine->core;
+    (void) keys;
     core->runFrame(core);
     blip_clear(core->getAudioChannel(core, 0));
     blip_clear(core->getAudioChannel(core, 1));
