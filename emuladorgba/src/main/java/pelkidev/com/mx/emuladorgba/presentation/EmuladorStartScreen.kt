@@ -187,12 +187,15 @@ private fun GbaControls(
             onChanged,
             Modifier.align(Alignment.CenterStart),
         )
-        Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            verticalAlignment = Alignment.Top,
+        ) {
             Control(
                 "B",
                 GbaButton.B,
                 onChanged,
-                Modifier.padding(end = 12.dp),
+                Modifier.padding(top = 36.dp, end = 12.dp),
                 style = ControlStyle.Face,
                 fill = FaceB,
             )
