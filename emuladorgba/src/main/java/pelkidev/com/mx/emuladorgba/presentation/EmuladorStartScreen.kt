@@ -103,24 +103,26 @@ fun EmuladorStartScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                text = "Emulador Game Boy Advance",
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center,
-            )
-            Button(
-                onClick = { pickGbaFile.launch(arrayOf("*/*")) },
-                modifier = Modifier.padding(top = 16.dp),
-            ) {
-                Text(text = stringResource(R.string.emuladorgba_choose_file))
-            }
-            if (uiState.showInvalidFileMessage) {
+            if (uiState.loadedFileName == null) {
                 Text(
-                    text = stringResource(R.string.emuladorgba_invalid_file),
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = "Emulador Game Boy Advance",
+                    style = MaterialTheme.typography.headlineMedium,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 16.dp),
                 )
+                Button(
+                    onClick = { pickGbaFile.launch(arrayOf("*/*")) },
+                    modifier = Modifier.padding(top = 16.dp),
+                ) {
+                    Text(text = stringResource(R.string.emuladorgba_choose_file))
+                }
+                if (uiState.showInvalidFileMessage) {
+                    Text(
+                        text = stringResource(R.string.emuladorgba_invalid_file),
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                }
             }
             uiState.loadedFileName?.let { fileName ->
                 Text(
