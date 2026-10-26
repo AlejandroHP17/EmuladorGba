@@ -10,12 +10,16 @@
 #define GBA_WIDTH 240
 #define GBA_HEIGHT 160
 #define GBA_PIXELS (GBA_WIDTH * GBA_HEIGHT)
+#define AUDIO_RATE 48000
+#define AUDIO_FRAME_SAMPLES 804
+#define AUDIO_BUFFER_SAMPLES (AUDIO_FRAME_SAMPLES * 2)
 #define LOG_TAG "EmuladorGba"
 
 struct Machine {
     struct mCore* core;
     color_t video[GBA_PIXELS];
     jint argb[GBA_PIXELS];
+    jshort pcm[AUDIO_BUFFER_SAMPLES * 2];
     int64_t fpsWindowStart;
     int framesInWindow;
 };
@@ -68,20 +72,35 @@ Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeCreate(JNIEnv* env, jobject
         return 0;
     }
     core->reset(core);
+    core->setAudioBufferSize(core, AUDIO_BUFFER_SAMPLES);
+    double clock = core->frequency(core);
+    blip_set_rates(core->getAudioChannel(core, 0), clock, AUDIO_RATE);
+    blip_set_rates(core->getAudioChannel(core, 1), clock, AUDIO_RATE);
     machine->fpsWindowStart = nowNanos();
     return (jlong) (intptr_t) machine;
 }
 
-JNIEXPORT void JNICALL
+JNIEXPORT jint JNICALL
 Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeRunFrame(
-        JNIEnv* env, jobject thiz, jlong handle, jintArray out, jint keys) {
+        JNIEnv* env, jobject thiz, jlong handle, jintArray out, jint keys, jshortArray audioOut) {
     struct Machine* machine = (struct Machine*) (intptr_t) handle;
-    if (!machine) return;
+    if (!machine) return 0;
     struct mCore* core = machine->core;
     core->setKeys(core, (uint32_t) keys);
     core->runFrame(core);
-    blip_clear(core->getAudioChannel(core, 0));
-    blip_clear(core->getAudioChannel(core, 1));
+    struct blip_t* left = core->getAudioChannel(core, 0);
+    struct blip_t* right = core->getAudioChannel(core, 1);
+    jint produced = 0;
+    if (left && right) {
+        int avail = blip_samples_avail(left);
+        if (avail > AUDIO_BUFFER_SAMPLES) avail = AUDIO_BUFFER_SAMPLES;
+        if (avail > 0) {
+            blip_read_samples(left, machine->pcm, avail, 1);
+            blip_read_samples(right, machine->pcm + 1, avail, 1);
+            produced = avail;
+            (*env)->SetShortArrayRegion(env, audioOut, 0, produced * 2, machine->pcm);
+        }
+    }
     for (int i = 0; i < GBA_PIXELS; ++i) {
         uint32_t abgr = machine->video[i];
         machine->argb[i] = (jint) (0xFF000000u
@@ -91,6 +110,7 @@ Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeRunFrame(
     }
     (*env)->SetIntArrayRegion(env, out, 0, GBA_PIXELS, machine->argb);
     logFramesPerSecond(machine);
+    return produced;
 }
 
 JNIEXPORT void JNICALL

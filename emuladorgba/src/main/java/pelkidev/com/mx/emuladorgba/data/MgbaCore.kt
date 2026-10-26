@@ -13,10 +13,12 @@ interface GbaCore {
 
 class MgbaCore(rom: ByteArray) : GbaCore {
     private val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT) { BLACK }
+    private val pcm = ShortArray(AUDIO_BUFFER_SAMPLES * 2)
     private var handle: Long = nativeCreate(rom)
 
     @Volatile
     private var keys = 0
+    private var produced = 0
 
     init {
         check(handle != 0L) { "mGBA no pudo cargar el ROM" }
@@ -24,7 +26,7 @@ class MgbaCore(rom: ByteArray) : GbaCore {
 
     override fun step() {
         if (handle == 0L) return
-        nativeRunFrame(handle, pixels, keys)
+        produced = nativeRunFrame(handle, pixels, keys, pcm)
     }
 
     override fun frame(): GbaFrame = GbaFrame(pixels)
@@ -44,11 +46,12 @@ class MgbaCore(rom: ByteArray) : GbaCore {
     }
 
     private external fun nativeCreate(rom: ByteArray): Long
-    private external fun nativeRunFrame(handle: Long, out: IntArray, keys: Int)
+    private external fun nativeRunFrame(handle: Long, out: IntArray, keys: Int, audioOut: ShortArray): Int
     private external fun nativeDestroy(handle: Long)
 
     private companion object {
         const val BLACK = 0xFF000000.toInt()
+        const val AUDIO_BUFFER_SAMPLES = 1608
 
         init {
             System.loadLibrary("emuladorgba_mgba")
