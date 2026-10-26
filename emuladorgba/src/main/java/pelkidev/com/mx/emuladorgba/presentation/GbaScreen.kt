@@ -26,7 +26,7 @@ fun GbaScreen(
     val image = remember(bitmap) { bitmap.asImageBitmap() }
     BoxWithConstraints(
         modifier = modifier,
-        contentAlignment = Alignment.Center,
+        contentAlignment = Alignment.TopCenter,
     ) {
         val width = minOf(maxWidth, maxHeight * ratio)
         val height = width / ratio

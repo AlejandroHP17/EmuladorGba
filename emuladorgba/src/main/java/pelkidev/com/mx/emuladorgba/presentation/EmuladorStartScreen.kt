@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -105,15 +104,15 @@ fun EmuladorStartScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (uiState.loadedFileName == null) {
+        if (uiState.loadedFileName == null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Text(
                     text = "Emulador Game Boy Advance",
                     style = MaterialTheme.typography.headlineMedium,
@@ -134,30 +133,19 @@ fun EmuladorStartScreen(
                     )
                 }
             }
-            uiState.loadedFileName?.let { fileName ->
-                Text(
-                    text = fileName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 16.dp),
+        } else {
+            Box(modifier = Modifier.fillMaxSize()) {
+                GbaScreen(
+                    frame = { frame.value },
+                    modifier = Modifier.fillMaxSize(),
                 )
-            }
-            if (uiState.loadedFileName != null) {
-                Box(
+                GbaControls(
                     modifier = Modifier
-                        .padding(top = 16.dp)
-                        .fillMaxWidth()
-                        .weight(1f),
-                ) {
-                    GbaScreen(
-                        frame = { frame.value },
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    GbaControls(
-                        modifier = Modifier.fillMaxSize(),
-                        onChanged = viewModel::onControlChanged,
-                    )
-                }
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding(),
+                    onChanged = viewModel::onControlChanged,
+                )
             }
         }
     }
