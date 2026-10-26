@@ -44,6 +44,7 @@ class EmuladorStartViewModel(
     private var machine: GbaCore? = null
     private var heldButtons = emptySet<GbaButton>()
     private var ticker: Job? = null
+    private var paused = false
     private val tickerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     fun onFileChosen(fileName: String, readBytes: () -> ByteArray?) {
@@ -65,6 +66,7 @@ class EmuladorStartViewModel(
         }
         loadedRom = bytes
         heldButtons = emptySet()
+        paused = false
         _frame.value = next.frame()
         _uiState.update {
             it.copy(
@@ -84,7 +86,27 @@ class EmuladorStartViewModel(
         running.hold(next)
     }
 
+    fun onAppStopped() {
+        if (paused) return
+        paused = true
+        ticker?.cancel()
+        ticker = null
+        synchronized(coreLock) {
+            machine?.pause()
+        }
+    }
+
+    fun onAppStarted() {
+        if (!paused) return
+        paused = false
+        synchronized(coreLock) {
+            machine?.resume()
+        }
+        if (autoAdvance && machine != null) startTicker()
+    }
+
     fun onMachineTick() {
+        if (paused) return
         val running: GbaCore
         val next: GbaFrame
         val heard: ByteArray
@@ -103,6 +125,7 @@ class EmuladorStartViewModel(
     }
 
     private fun startTicker() {
+        ticker?.cancel()
         ticker = tickerScope.launch {
             var deadline = System.nanoTime()
             while (isActive) {

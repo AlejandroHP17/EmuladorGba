@@ -11,6 +11,8 @@ interface GbaCore {
     fun frame(): GbaFrame
     fun samples(): ByteArray
     fun hold(buttons: Set<GbaButton>)
+    fun pause() {}
+    fun resume() {}
     fun close()
 }
 
@@ -44,6 +46,15 @@ class MgbaCore(rom: ByteArray) : GbaCore {
         if (track.playState != AudioTrack.PLAYSTATE_PLAYING) track.play()
         track.write(pcm, 0, produced * 2, AudioTrack.WRITE_BLOCKING)
     }
+
+    override fun pause() {
+        track?.let { playing ->
+            if (playing.playState == AudioTrack.PLAYSTATE_PLAYING) playing.pause()
+            playing.flush()
+        }
+    }
+
+    override fun resume() = Unit
 
     override fun hold(buttons: Set<GbaButton>) {
         var mask = 0
