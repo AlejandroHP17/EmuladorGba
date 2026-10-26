@@ -415,6 +415,20 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun pause_releasesHeldControls() {
+        val viewModel = newViewModel()
+        viewModel.onFileChosen("juego.gba") { readControls() }
+        viewModel.onControlChanged(GbaButton.A, true)
+        viewModel.onMachineTick()
+
+        viewModel.onAppStopped()
+        viewModel.onAppStarted()
+        viewModel.onMachineTick()
+
+        assertEquals(pixelAfter(emptySet()), viewModel.frame.value!!.pixel(0, 0))
+    }
+
+    @Test
     fun heldControl_doesNotCarryToTheNextRom() {
         val viewModel = newViewModel()
         viewModel.onFileChosen("juego.gba") { readControls() }

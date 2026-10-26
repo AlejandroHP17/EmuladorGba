@@ -91,7 +91,9 @@ class EmuladorStartViewModel(
         paused = true
         ticker?.cancel()
         ticker = null
+        heldButtons = emptySet()
         synchronized(coreLock) {
+            machine?.hold(emptySet())
             machine?.pause()
         }
     }
