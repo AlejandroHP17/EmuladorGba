@@ -11,15 +11,16 @@ import android.provider.OpenableColumns
 import java.util.concurrent.atomic.AtomicBoolean
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Button
@@ -33,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -65,9 +67,10 @@ fun EmuladorStartScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = "Emulador Game Boy Advance",
@@ -76,7 +79,7 @@ fun EmuladorStartScreen(
             )
             Button(
                 onClick = { pickGbaFile.launch(arrayOf("*/*")) },
-                modifier = Modifier.padding(top = 24.dp),
+                modifier = Modifier.padding(top = 16.dp),
             ) {
                 Text(text = stringResource(R.string.emuladorgba_choose_file))
             }
@@ -105,7 +108,7 @@ fun EmuladorStartScreen(
                         .weight(1f),
                 )
                 GbaControls(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
                     onChanged = viewModel::onControlChanged,
                 )
             }
@@ -143,7 +146,7 @@ private fun GbaControls(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Dpad(onChanged)
-            Row {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Control("Select", GbaButton.SELECT, onChanged)
                 Control("Start", GbaButton.START, onChanged)
             }
@@ -173,18 +176,25 @@ private fun Control(
     button: GbaButton,
     onChanged: (GbaButton, Boolean) -> Unit,
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    LaunchedEffect(pressed) {
-        onChanged(button, pressed)
+    DisposableEffect(button) {
+        onDispose { onChanged(button, false) }
     }
-    TextButton(
-        onClick = {},
-        interactionSource = interaction,
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-    ) {
-        Text(text = label)
-    }
+    Text(
+        text = label,
+        modifier = Modifier
+            .pointerInput(button) {
+                awaitEachGesture {
+                    awaitFirstDown()
+                    onChanged(button, true)
+                    try {
+                        waitForUpOrCancellation()
+                    } finally {
+                        onChanged(button, false)
+                    }
+                }
+            }
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+    )
 }
 
 @Composable
