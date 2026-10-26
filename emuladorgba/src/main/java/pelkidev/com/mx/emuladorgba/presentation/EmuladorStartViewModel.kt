@@ -60,6 +60,7 @@ class EmuladorStartViewModel(
         ticker?.cancel()
         synchronized(coreLock) {
             machine?.close()
+            next.hold(emptySet())
             machine = next
         }
         loadedRom = bytes

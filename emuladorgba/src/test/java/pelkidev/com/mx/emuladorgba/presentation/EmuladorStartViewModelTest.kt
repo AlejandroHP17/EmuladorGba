@@ -415,6 +415,18 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun heldControl_doesNotCarryToTheNextRom() {
+        val viewModel = newViewModel()
+        viewModel.onFileChosen("juego.gba") { readControls() }
+        viewModel.onControlChanged(GbaButton.A, true)
+
+        viewModel.onFileChosen("otro.gba") { readControls() }
+        viewModel.onMachineTick()
+
+        assertEquals(pixelAfter(emptySet()), viewModel.frame.value!!.pixel(0, 0))
+    }
+
+    @Test
     fun withoutARom_aControlDoesNothing() {
         val viewModel = newViewModel()
 
