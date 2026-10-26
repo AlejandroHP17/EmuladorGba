@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -25,7 +26,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,11 +40,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -163,24 +174,50 @@ private fun GbaControls(
             GbaButton.L,
             onChanged,
             Modifier.align(Alignment.TopStart),
+            style = ControlStyle.Shoulder,
         )
         Control(
             "R",
             GbaButton.R,
             onChanged,
             Modifier.align(Alignment.TopEnd),
+            style = ControlStyle.Shoulder,
         )
         Dpad(
             onChanged,
             Modifier.align(Alignment.CenterStart),
         )
         Row(modifier = Modifier.align(Alignment.CenterEnd)) {
-            Control("B", GbaButton.B, onChanged)
-            Control("A", GbaButton.A, onChanged)
+            Control(
+                "B",
+                GbaButton.B,
+                onChanged,
+                Modifier.padding(end = 12.dp),
+                style = ControlStyle.Face,
+                fill = FaceB,
+            )
+            Control(
+                "A",
+                GbaButton.A,
+                onChanged,
+                style = ControlStyle.Face,
+                fill = FaceA,
+            )
         }
         Row(modifier = Modifier.align(Alignment.BottomCenter)) {
-            Control("Select", GbaButton.SELECT, onChanged)
-            Control("Start", GbaButton.START, onChanged)
+            Control(
+                "Select",
+                GbaButton.SELECT,
+                onChanged,
+                Modifier.padding(end = 12.dp),
+                style = ControlStyle.Menu,
+            )
+            Control(
+                "Start",
+                GbaButton.START,
+                onChanged,
+                style = ControlStyle.Menu,
+            )
         }
     }
 }
@@ -194,13 +231,21 @@ private fun Dpad(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Control("↑", GbaButton.UP, onChanged)
-        Row {
-            Control("←", GbaButton.LEFT, onChanged)
-            Control("→", GbaButton.RIGHT, onChanged)
+        Control("↑", GbaButton.UP, onChanged, style = ControlStyle.Direction)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Control("←", GbaButton.LEFT, onChanged, style = ControlStyle.Direction)
+            Box(modifier = Modifier.size(20.dp))
+            Control("→", GbaButton.RIGHT, onChanged, style = ControlStyle.Direction)
         }
-        Control("↓", GbaButton.DOWN, onChanged)
+        Control("↓", GbaButton.DOWN, onChanged, style = ControlStyle.Direction)
     }
+}
+
+private enum class ControlStyle {
+    Face,
+    Shoulder,
+    Menu,
+    Direction,
 }
 
 @Composable
@@ -209,13 +254,18 @@ private fun Control(
     button: GbaButton,
     onChanged: (GbaButton, Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    style: ControlStyle = ControlStyle.Face,
+    fill: Color = PadFill,
 ) {
     DisposableEffect(button) {
         onDispose { onChanged(button, false) }
     }
-    Text(
-        text = label,
+    val look = style.look()
+    Box(
         modifier = modifier
+            .size(look.width, look.height)
+            .clip(look.shape)
+            .background(fill)
             .pointerInput(button) {
                 awaitEachGesture {
                     awaitFirstDown()
@@ -226,10 +276,36 @@ private fun Control(
                         onChanged(button, false)
                     }
                 }
-            }
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-    )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = look.fontSize,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
+
+private data class ControlLook(
+    val width: Dp,
+    val height: Dp,
+    val shape: Shape,
+    val fontSize: TextUnit,
+)
+
+private fun ControlStyle.look(): ControlLook = when (this) {
+    ControlStyle.Face -> ControlLook(72.dp, 72.dp, CircleShape, 22.sp)
+    ControlStyle.Shoulder -> ControlLook(84.dp, 48.dp, RoundedCornerShape(percent = 50), 18.sp)
+    ControlStyle.Menu -> ControlLook(88.dp, 40.dp, RoundedCornerShape(percent = 50), 13.sp)
+    ControlStyle.Direction -> ControlLook(56.dp, 56.dp, RoundedCornerShape(12.dp), 20.sp)
+}
+
+private val PadFill = Color.White.copy(alpha = 0.28f)
+private val FaceA = Color(0xCC3D8BFF)
+private val FaceB = Color(0xCCFF5A5A)
 
 @Composable
 private fun GbaSpeaker(samples: ByteArray) {
