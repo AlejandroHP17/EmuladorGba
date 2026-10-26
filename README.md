@@ -60,13 +60,13 @@ Maven Local:
 
 GitHub Packages (repo `AlejandroHP17/EmuladorGba`): push a `main` publica `1.0.0-SNAPSHOT`. Hace falta el secret `GH_PACKAGES_TOKEN` (PAT con `read:packages` y `write:packages`). El publish remoto falla hasta que ese repo y el secret existan.
 
-## Integración en el host (pendiente)
+## Integración en el host
 
-Todavía no está cableado en `MiniJuegos/`. Cuando el módulo ya se pueda jugar:
+Cableado en `MiniJuegos/`:
 
-1. Añadir el Maven repo del juego en `settings.gradle.kts` (o usar `mavenLocal()` en desarrollo).
+1. Maven repo `GitHubPackagesEmuladorGba` (`AlejandroHP17/EmuladorGba`); `mavenLocal()` como fallback.
 2. `implementation("pelkidev.com.mx.minijuegos:emuladorgba:1.0.0-SNAPSHOT")`.
-3. Registrar `EmuladorGbaGameModule` en `GameCatalog.games`.
+3. `EmuladorGbaGameModule` en `GameCatalog.games`.
 4. Icono `ic_game_emuladorgba` y rama en `GameVisuals.forId("emuladorgba")`.
 
 ## Credenciales locales

@@ -1,6 +1,9 @@
 package pelkidev.com.mx.emuladorgba.presentation
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
@@ -55,6 +58,11 @@ fun EmuladorStartScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val frame = viewModel.frame.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        context.findActivity()?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        onDispose { }
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, viewModel) {
         val observer = LifecycleEventObserver { _, event ->
@@ -68,7 +76,6 @@ fun EmuladorStartScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     GbaSpeaker(uiState.samples)
-    val context = LocalContext.current
     val pickGbaFile = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri ->
@@ -350,4 +357,13 @@ private fun displayName(context: Context, uri: Uri): String {
         }
     }
     return uri.lastPathSegment.orEmpty()
+}
+
+private fun Context.findActivity(): Activity? {
+    var current: Context? = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
 }
