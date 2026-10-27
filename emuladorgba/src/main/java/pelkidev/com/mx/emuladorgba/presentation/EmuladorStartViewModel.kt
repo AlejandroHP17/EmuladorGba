@@ -82,7 +82,7 @@ class EmuladorStartViewModel(
                 showInvalidFileMessage = false,
                 samples = byteArrayOf(),
                 selectedSlot = 1,
-                slotNames = listOf("", "", ""),
+                slotNames = readSlotNames(trimmed),
             )
         }
         if (autoAdvance) startTicker()
@@ -104,6 +104,14 @@ class EmuladorStartViewModel(
             state.copy(slotNames = names)
         }
         writeSlotName(fileName, slot, limited)
+    }
+
+    private fun readSlotNames(fileName: String): List<String> {
+        val directory = stateDirectory ?: return listOf("", "", "")
+        return (1..3).map { slot ->
+            val file = slotNameFile(directory, fileName, slot)
+            if (!file.isFile) "" else file.readText().take(SLOT_NAME_LIMIT)
+        }
     }
 
     private fun writeSlotName(fileName: String, slot: Int, label: String) {
