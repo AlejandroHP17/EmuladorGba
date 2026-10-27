@@ -5,6 +5,7 @@
 
 #include <mgba/core/blip_buf.h>
 #include <mgba/core/core.h>
+#include <mgba/core/serialize.h>
 #include <mgba-util/vfs.h>
 
 #define GBA_WIDTH 240
@@ -111,6 +112,45 @@ Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeRunFrame(
     (*env)->SetIntArrayRegion(env, out, 0, GBA_PIXELS, machine->argb);
     logFramesPerSecond(machine);
     return produced;
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeExportState(JNIEnv* env, jobject thiz, jlong handle) {
+    struct Machine* machine = (struct Machine*) (intptr_t) handle;
+    if (!machine) return NULL;
+    struct VFile* vf = VFileMemChunk(NULL, 0);
+    if (!vf) return NULL;
+    bool ok = mCoreSaveStateNamed(machine->core, vf, SAVESTATE_SAVEDATA | SAVESTATE_RTC);
+    ssize_t size = ok ? vf->size(vf) : 0;
+    jbyteArray out = NULL;
+    if (ok && size > 0) {
+        void* mapped = vf->map(vf, (size_t) size, MAP_READ);
+        if (mapped) {
+            out = (*env)->NewByteArray(env, (jsize) size);
+            if (out) {
+                (*env)->SetByteArrayRegion(env, out, 0, (jsize) size, mapped);
+            }
+            vf->unmap(vf, mapped, (size_t) size);
+        }
+    }
+    vf->close(vf);
+    return out;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeImportState(
+        JNIEnv* env, jobject thiz, jlong handle, jbyteArray state) {
+    struct Machine* machine = (struct Machine*) (intptr_t) handle;
+    if (!machine || !state) return JNI_FALSE;
+    jsize size = (*env)->GetArrayLength(env, state);
+    if (size <= 0) return JNI_FALSE;
+    jbyte* bytes = (*env)->GetByteArrayElements(env, state, NULL);
+    if (!bytes) return JNI_FALSE;
+    struct VFile* vf = VFileFromConstMemory(bytes, (size_t) size);
+    bool ok = vf && mCoreLoadStateNamed(machine->core, vf, SAVESTATE_SAVEDATA | SAVESTATE_RTC);
+    if (vf) vf->close(vf);
+    (*env)->ReleaseByteArrayElements(env, state, bytes, JNI_ABORT);
+    return ok ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL

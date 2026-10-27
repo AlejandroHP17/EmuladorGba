@@ -13,6 +13,8 @@ interface GbaCore {
     fun hold(buttons: Set<GbaButton>)
     fun pause() {}
     fun resume() {}
+    fun exportState(): ByteArray = byteArrayOf()
+    fun importState(state: ByteArray): Boolean = false
     fun close()
 }
 
@@ -62,6 +64,16 @@ class MgbaCore(rom: ByteArray) : GbaCore {
         keys = mask
     }
 
+    override fun exportState(): ByteArray {
+        if (handle == 0L) return byteArrayOf()
+        return nativeExportState(handle) ?: byteArrayOf()
+    }
+
+    override fun importState(state: ByteArray): Boolean {
+        if (handle == 0L || state.isEmpty()) return false
+        return nativeImportState(handle, state)
+    }
+
     override fun close() {
         track?.let { playing ->
             if (playing.playState == AudioTrack.PLAYSTATE_PLAYING) playing.pause()
@@ -76,6 +88,8 @@ class MgbaCore(rom: ByteArray) : GbaCore {
 
     private external fun nativeCreate(rom: ByteArray): Long
     private external fun nativeRunFrame(handle: Long, out: IntArray, keys: Int, audioOut: ShortArray): Int
+    private external fun nativeExportState(handle: Long): ByteArray?
+    private external fun nativeImportState(handle: Long, state: ByteArray): Boolean
     private external fun nativeDestroy(handle: Long)
 
     private companion object {
