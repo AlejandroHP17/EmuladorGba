@@ -94,7 +94,7 @@ class EmuladorStartViewModel(
     }
 
     fun onSlotNamed(name: String) {
-        if (_uiState.value.loadedFileName == null) return
+        val fileName = _uiState.value.loadedFileName ?: return
         val slot = _uiState.value.selectedSlot
         val limited = name.take(SLOT_NAME_LIMIT)
         _uiState.update { state ->
@@ -103,6 +103,18 @@ class EmuladorStartViewModel(
             names[slot - 1] = limited
             state.copy(slotNames = names)
         }
+        writeSlotName(fileName, slot, limited)
+    }
+
+    private fun writeSlotName(fileName: String, slot: Int, label: String) {
+        val directory = stateDirectory ?: return
+        directory.mkdirs()
+        val file = slotNameFile(directory, fileName, slot)
+        if (label.isBlank()) {
+            file.delete()
+            return
+        }
+        file.writeText(label)
     }
 
     fun onSaveState() {
@@ -243,6 +255,10 @@ class EmuladorStartViewModel(
 
         fun cartridgeFile(directory: File, name: String): File {
             return File(directory, stateFile(directory, name).name + ".sav")
+        }
+
+        fun slotNameFile(directory: File, name: String, slot: Int): File {
+            return File(directory, stateFile(directory, name, slot).name + ".name")
         }
     }
 }
