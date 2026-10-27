@@ -61,6 +61,7 @@ class EmuladorStartViewModel(
             return
         }
         ticker?.cancel()
+        saveCartridge()
         synchronized(coreLock) {
             machine?.close()
             next.hold(emptySet())
@@ -87,6 +88,15 @@ class EmuladorStartViewModel(
         if (bytes.isEmpty()) return
         directory.mkdirs()
         stateFile(directory, name).writeBytes(bytes)
+    }
+
+    private fun saveCartridge() {
+        val name = _uiState.value.loadedFileName ?: return
+        val directory = stateDirectory ?: return
+        val bytes = synchronized(coreLock) { machine?.exportCartridge() } ?: return
+        if (bytes.isEmpty()) return
+        directory.mkdirs()
+        cartridgeFile(directory, name).writeBytes(bytes)
     }
 
     fun onLoadState() {
@@ -173,6 +183,7 @@ class EmuladorStartViewModel(
         ticker = null
         paused = true
         onSaveState()
+        saveCartridge()
         synchronized(coreLock) {
             machine?.close()
             machine = null
@@ -192,6 +203,10 @@ class EmuladorStartViewModel(
         fun stateFile(directory: File, name: String): File {
             val safe = name.replace("/", "_").replace("\\", "_")
             return File(directory, safe)
+        }
+
+        fun cartridgeFile(directory: File, name: String): File {
+            return File(directory, stateFile(directory, name).name + ".sav")
         }
     }
 }

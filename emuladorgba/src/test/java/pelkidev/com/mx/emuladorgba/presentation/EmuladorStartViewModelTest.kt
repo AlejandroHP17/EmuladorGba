@@ -550,6 +550,35 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun leave_writesTheCartridgeApartFromTheState() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 4
+        cores[0].cartridge = byteArrayOf(8, 8)
+
+        viewModel.onLeave()
+
+        assertArrayEquals(byteArrayOf(4), File(directory, "juego.gba").readBytes())
+        assertArrayEquals(byteArrayOf(8, 8), File(directory, "juego.gba.sav").readBytes())
+    }
+
+    @Test
+    fun anotherFile_writesThePreviousCartridge() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].cartridge = byteArrayOf(2)
+
+        viewModel.onFileChosen("otro.gba") { byteArrayOf(3) }
+
+        assertArrayEquals(byteArrayOf(2), File(directory, "juego.gba.sav").readBytes())
+        assertFalse(File(directory, "otro.gba.sav").exists())
+    }
+
+    @Test
     fun leave_withoutAFile_doesNotCreateState() {
         val directory = createTempDirectory("gba-state").toFile()
         val kept = File(directory, "juego.gba")
@@ -620,6 +649,7 @@ class EmuladorStartViewModelTest {
 
     private class RememberingCore : GbaCore {
         var token: Byte = 1
+        var cartridge: ByteArray = byteArrayOf()
         var imported: ByteArray? = null
             private set
         private var shown: Byte = 1
@@ -633,6 +663,7 @@ class EmuladorStartViewModelTest {
         override fun samples(): ByteArray = byteArrayOf()
         override fun hold(buttons: Set<GbaButton>) = Unit
         override fun exportState(): ByteArray = byteArrayOf(token)
+        override fun exportCartridge(): ByteArray = cartridge.copyOf()
         override fun importState(state: ByteArray): Boolean {
             imported = state.copyOf()
             shown = state.first()

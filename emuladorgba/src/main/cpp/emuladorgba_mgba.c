@@ -153,6 +153,21 @@ Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeImportState(
     return ok ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jbyteArray JNICALL
+Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeExportCartridge(JNIEnv* env, jobject thiz, jlong handle) {
+    struct Machine* machine = (struct Machine*) (intptr_t) handle;
+    if (!machine) return NULL;
+    void* sram = NULL;
+    size_t size = machine->core->savedataClone(machine->core, &sram);
+    if (!size || !sram) return NULL;
+    jbyteArray out = (*env)->NewByteArray(env, (jsize) size);
+    if (out) {
+        (*env)->SetByteArrayRegion(env, out, 0, (jsize) size, sram);
+    }
+    free(sram);
+    return out;
+}
+
 JNIEXPORT void JNICALL
 Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeDestroy(JNIEnv* env, jobject thiz, jlong handle) {
     struct Machine* machine = (struct Machine*) (intptr_t) handle;
