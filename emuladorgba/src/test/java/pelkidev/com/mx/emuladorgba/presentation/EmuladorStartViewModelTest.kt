@@ -782,6 +782,60 @@ class EmuladorStartViewModelTest {
         assertFalse(File(directory, "juego.gba").exists())
     }
 
+    @Test
+    fun slotNames_belongToThatFileAndDoNotReplaceTheMoment() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        val frame = viewModel.frame.value
+
+        viewModel.onSlotNamed("jefe")
+
+        assertEquals(listOf("jefe", "", ""), viewModel.uiState.value.slotNames)
+        assertEquals("jefe", File(directory, "juego.gba.name").readText())
+        assertTrue(viewModel.frame.value === frame)
+        assertFalse(File(directory, "juego.gba").exists())
+
+        viewModel.onSlotNamed("a".repeat(60))
+
+        assertEquals("a".repeat(50), viewModel.uiState.value.slotNames[0])
+        assertEquals("a".repeat(50), File(directory, "juego.gba.name").readText())
+
+        viewModel.onSlotSelected(2)
+        viewModel.onSlotNamed("bosque")
+        cores[0].token = 9
+        viewModel.onSaveState()
+        val saved = File(directory, "juego.gba.2").readBytes()
+        viewModel.onSlotNamed("bosque nuevo")
+
+        assertEquals("a".repeat(50), viewModel.uiState.value.slotNames[0])
+        assertEquals("bosque nuevo", viewModel.uiState.value.slotNames[1])
+        assertArrayEquals(saved, File(directory, "juego.gba.2").readBytes())
+        viewModel.onLoadState()
+        assertArrayEquals(byteArrayOf(9), cores[0].imported)
+        assertEquals(9, viewModel.frame.value!!.pixel(0, 0))
+
+        viewModel.onSlotNamed("   ")
+
+        assertTrue(viewModel.uiState.value.slotNames[1].isBlank())
+        assertFalse(File(directory, "juego.gba.2.name").exists())
+        assertArrayEquals(saved, File(directory, "juego.gba.2").readBytes())
+
+        val reopened = viewModelWithStates(directory, mutableListOf())
+        reopened.onFileChosen("juego.gba") { byteArrayOf(1) }
+
+        assertEquals("a".repeat(50), reopened.uiState.value.slotNames[0])
+        assertEquals("", reopened.uiState.value.slotNames[1])
+        assertEquals("", reopened.uiState.value.slotNames[2])
+
+        reopened.onFileChosen("otro.gba") { byteArrayOf(2) }
+
+        assertEquals(listOf("", "", ""), reopened.uiState.value.slotNames)
+        assertFalse(File(directory, "otro.gba.name").exists())
+        assertEquals("a".repeat(50), File(directory, "juego.gba.name").readText())
+    }
+
     private fun viewModelWithStates(directory: File, cores: MutableList<RememberingCore>) =
         EmuladorStartViewModel(
             startCore = { RememberingCore().also(cores::add) },
