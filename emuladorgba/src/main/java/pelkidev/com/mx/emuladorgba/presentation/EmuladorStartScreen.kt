@@ -168,6 +168,8 @@ fun EmuladorStartScreen(
                     onSlotNamed = viewModel::onSlotNamed,
                     onSave = viewModel::onSaveState,
                     onLoad = viewModel::onLoadState,
+                    fastForward = uiState.fastForward,
+                    onFastForward = viewModel::onFastForwardChanged,
                 )
                 if (uiState.replaceAsk != null) {
                     ReplaceQuestion(
@@ -225,6 +227,8 @@ private fun GbaControls(
     onSlotNamed: (String) -> Unit,
     onSave: () -> Unit,
     onLoad: () -> Unit,
+    fastForward: Boolean,
+    onFastForward: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.padding(8.dp)) {
@@ -259,6 +263,12 @@ private fun GbaControls(
             StateAction(
                 stringResource(R.string.emuladorgba_load),
                 onLoad,
+                Modifier.padding(top = 8.dp),
+            )
+            FastForwardHold(
+                stringResource(R.string.emuladorgba_fast_forward),
+                fastForward,
+                onFastForward,
                 Modifier.padding(top = 8.dp),
             )
         }
@@ -317,6 +327,44 @@ private fun GbaControls(
                 style = ControlStyle.Menu,
             )
         }
+    }
+}
+
+@Composable
+private fun FastForwardHold(
+    label: String,
+    held: Boolean,
+    onChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    DisposableEffect(Unit) {
+        onDispose { onChanged(false) }
+    }
+    Box(
+        modifier = modifier
+            .size(96.dp, 40.dp)
+            .clip(RoundedCornerShape(percent = 50))
+            .background(if (held) FaceA else FaceShoulder)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown()
+                    onChanged(true)
+                    try {
+                        waitForUpOrCancellation()
+                    } finally {
+                        onChanged(false)
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 

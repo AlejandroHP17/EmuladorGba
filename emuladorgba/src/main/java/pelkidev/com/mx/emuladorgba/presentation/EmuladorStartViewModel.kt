@@ -28,6 +28,7 @@ data class EmuladorStartUiState(
     val samples: ByteArray = byteArrayOf(),
     val selectedSlot: Int = 1,
     val slotNames: List<String> = listOf("", "", ""),
+    val fastForward: Boolean = false,
     val replaceAsk: ReplaceAsk? = null,
     val replaceLabel: String = "",
 )
@@ -90,6 +91,11 @@ class EmuladorStartViewModel(
             )
         }
         if (autoAdvance) startTicker()
+    }
+
+    fun onFastForwardChanged(held: Boolean) {
+        if (_uiState.value.loadedFileName == null) return
+        _uiState.update { it.copy(fastForward = held) }
     }
 
     fun onSlotSelected(slot: Int) {
