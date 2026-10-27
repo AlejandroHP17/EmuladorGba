@@ -60,11 +60,14 @@ class EmuladorStartViewModel(
         } catch (_: IllegalStateException) {
             return
         }
+        val trimmed = fileName.trim()
         ticker?.cancel()
         saveCartridge()
+        val cartridge = cartridgeBytes(trimmed)
         synchronized(coreLock) {
             machine?.close()
             next.hold(emptySet())
+            if (cartridge != null) next.importCartridge(cartridge)
             machine = next
         }
         loadedRom = bytes
@@ -73,7 +76,7 @@ class EmuladorStartViewModel(
         _frame.value = next.frame()
         _uiState.update {
             it.copy(
-                loadedFileName = fileName.trim(),
+                loadedFileName = trimmed,
                 showInvalidFileMessage = false,
                 samples = byteArrayOf(),
             )
@@ -97,6 +100,15 @@ class EmuladorStartViewModel(
         if (bytes.isEmpty()) return
         directory.mkdirs()
         cartridgeFile(directory, name).writeBytes(bytes)
+    }
+
+    private fun cartridgeBytes(name: String): ByteArray? {
+        val directory = stateDirectory ?: return null
+        val file = cartridgeFile(directory, name)
+        if (!file.isFile) return null
+        val bytes = file.readBytes()
+        if (bytes.isEmpty()) return null
+        return bytes
     }
 
     fun onLoadState() {

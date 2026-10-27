@@ -579,6 +579,42 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun open_loadsTheCartridgeOfThatFileBeforePlay() {
+        val directory = createTempDirectory("gba-state").toFile()
+        File(directory, "juego.gba.sav").writeBytes(byteArrayOf(9))
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+
+        assertArrayEquals(byteArrayOf(9), cores[0].loadedCartridge)
+        assertNotNull(viewModel.frame.value)
+    }
+
+    @Test
+    fun open_withoutCartridge_doesNotLoadOne() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+
+        assertNull(cores[0].loadedCartridge)
+    }
+
+    @Test
+    fun open_doesNotLoadAnotherFilesCartridge() {
+        val directory = createTempDirectory("gba-state").toFile()
+        File(directory, "juego.gba.sav").writeBytes(byteArrayOf(9))
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+
+        viewModel.onFileChosen("otro.gba") { byteArrayOf(2) }
+
+        assertNull(cores[0].loadedCartridge)
+    }
+
+    @Test
     fun leave_withoutAFile_doesNotCreateState() {
         val directory = createTempDirectory("gba-state").toFile()
         val kept = File(directory, "juego.gba")
@@ -650,6 +686,8 @@ class EmuladorStartViewModelTest {
     private class RememberingCore : GbaCore {
         var token: Byte = 1
         var cartridge: ByteArray = byteArrayOf()
+        var loadedCartridge: ByteArray? = null
+            private set
         var imported: ByteArray? = null
             private set
         private var shown: Byte = 1
@@ -664,6 +702,10 @@ class EmuladorStartViewModelTest {
         override fun hold(buttons: Set<GbaButton>) = Unit
         override fun exportState(): ByteArray = byteArrayOf(token)
         override fun exportCartridge(): ByteArray = cartridge.copyOf()
+        override fun importCartridge(savedata: ByteArray): Boolean {
+            loadedCartridge = savedata.copyOf()
+            return true
+        }
         override fun importState(state: ByteArray): Boolean {
             imported = state.copyOf()
             shown = state.first()

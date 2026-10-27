@@ -168,6 +168,20 @@ Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeExportCartridge(JNIEnv* env
     return out;
 }
 
+JNIEXPORT jboolean JNICALL
+Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeImportCartridge(
+        JNIEnv* env, jobject thiz, jlong handle, jbyteArray savedata) {
+    struct Machine* machine = (struct Machine*) (intptr_t) handle;
+    if (!machine || !savedata) return JNI_FALSE;
+    jsize size = (*env)->GetArrayLength(env, savedata);
+    if (size <= 0) return JNI_FALSE;
+    jbyte* bytes = (*env)->GetByteArrayElements(env, savedata, NULL);
+    if (!bytes) return JNI_FALSE;
+    bool ok = machine->core->savedataRestore(machine->core, bytes, (size_t) size, true);
+    (*env)->ReleaseByteArrayElements(env, savedata, bytes, JNI_ABORT);
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT void JNICALL
 Java_pelkidev_com_mx_emuladorgba_data_MgbaCore_nativeDestroy(JNIEnv* env, jobject thiz, jlong handle) {
     struct Machine* machine = (struct Machine*) (intptr_t) handle;
