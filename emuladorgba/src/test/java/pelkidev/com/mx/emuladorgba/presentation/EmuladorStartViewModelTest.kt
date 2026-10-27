@@ -603,6 +603,31 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun reopen_usesTheLatestCartridgeOfThatFile() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val firstCores = mutableListOf<RememberingCore>()
+        val first = viewModelWithStates(directory, firstCores)
+        first.onFileChosen("juego.gba") { byteArrayOf(1) }
+        firstCores[0].cartridge = byteArrayOf(1)
+        first.onLeave()
+
+        val secondCores = mutableListOf<RememberingCore>()
+        val second = viewModelWithStates(directory, secondCores)
+        second.onFileChosen("juego.gba") { byteArrayOf(1) }
+        assertArrayEquals(byteArrayOf(1), secondCores[0].loadedCartridge)
+        secondCores[0].cartridge = byteArrayOf(5)
+        second.onLeave()
+
+        val thirdCores = mutableListOf<RememberingCore>()
+        val third = viewModelWithStates(directory, thirdCores)
+        third.onFileChosen("juego.gba") { byteArrayOf(1) }
+        assertArrayEquals(byteArrayOf(5), thirdCores[0].loadedCartridge)
+
+        third.onFileChosen("otro.gba") { byteArrayOf(2) }
+        assertNull(thirdCores[1].loadedCartridge)
+    }
+
+    @Test
     fun open_doesNotLoadAnotherFilesCartridge() {
         val directory = createTempDirectory("gba-state").toFile()
         File(directory, "juego.gba.sav").writeBytes(byteArrayOf(9))
