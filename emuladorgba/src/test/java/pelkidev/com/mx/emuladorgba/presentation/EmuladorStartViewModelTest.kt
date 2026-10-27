@@ -967,6 +967,47 @@ class EmuladorStartViewModelTest {
         assertEquals("a".repeat(50), File(directory, "juego.gba.name").readText())
     }
 
+    @Test
+    fun fastForward_runsTwoFramesAndReturnsToOne() {
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = EmuladorStartViewModel(
+            startCore = { RememberingCore().also(cores::add) },
+            autoAdvance = false,
+        )
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+
+        viewModel.onMachineTick()
+
+        assertEquals(1, cores[0].steps)
+
+        viewModel.onFastForwardChanged(true)
+        viewModel.onControlChanged(GbaButton.A, true)
+        viewModel.onMachineTick()
+
+        assertEquals(3, cores[0].steps)
+        assertEquals(setOf(GbaButton.A), cores[0].held)
+
+        viewModel.onFastForwardChanged(false)
+        viewModel.onMachineTick()
+
+        assertEquals(4, cores[0].steps)
+
+        viewModel.onFastForwardChanged(true)
+        viewModel.onFileChosen("otro.gba") { byteArrayOf(2) }
+        viewModel.onMachineTick()
+
+        assertFalse(viewModel.uiState.value.fastForward)
+        assertEquals(1, cores[1].steps)
+
+        viewModel.onFastForwardChanged(true)
+        viewModel.onAppStopped()
+        viewModel.onAppStarted()
+        viewModel.onMachineTick()
+
+        assertFalse(viewModel.uiState.value.fastForward)
+        assertEquals(2, cores[1].steps)
+    }
+
     private fun viewModelWithStates(directory: File, cores: MutableList<RememberingCore>) =
         EmuladorStartViewModel(
             startCore = { RememberingCore().also(cores::add) },
@@ -982,15 +1023,22 @@ class EmuladorStartViewModelTest {
         var imported: ByteArray? = null
             private set
         private var shown: Byte = 1
+        var steps = 0
+        var held: Set<GbaButton> = emptySet()
+            private set
 
-        override fun step() = Unit
+        override fun step() {
+            steps += 1
+        }
         override fun frame(): GbaFrame {
             val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT)
             pixels[0] = shown.toInt() and 0xFF
             return GbaFrame(pixels)
         }
         override fun samples(): ByteArray = byteArrayOf()
-        override fun hold(buttons: Set<GbaButton>) = Unit
+        override fun hold(buttons: Set<GbaButton>) {
+            held = buttons
+        }
         override fun exportState(): ByteArray = byteArrayOf(token)
         override fun exportCartridge(): ByteArray = cartridge.copyOf()
         override fun importCartridge(savedata: ByteArray): Boolean {
