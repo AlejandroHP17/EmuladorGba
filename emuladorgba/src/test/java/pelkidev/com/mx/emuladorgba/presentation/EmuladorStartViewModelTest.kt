@@ -596,6 +596,51 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun reject_keepsTheChosenSlotAndKeepsPlaying() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 9
+        viewModel.onSaveState()
+        viewModel.onSlotSelected(2)
+        cores[0].token = 4
+        viewModel.onSaveState()
+        cores[0].token = 7
+        viewModel.onSaveState()
+
+        assertFalse(viewModel.onReplaceRejected())
+
+        assertNull(viewModel.uiState.value.replaceAsk)
+        assertEquals("juego.gba", viewModel.uiState.value.loadedFileName)
+        assertArrayEquals(byteArrayOf(4), File(directory, "juego.gba.2").readBytes())
+        assertArrayEquals(byteArrayOf(9), File(directory, "juego.gba").readBytes())
+    }
+
+    @Test
+    fun reject_afterLeave_keepsTheSlotAndLeaves() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 9
+        cores[0].cartridge = byteArrayOf(3)
+        viewModel.onSaveState()
+        cores[0].token = 4
+        cores[0].cartridge = byteArrayOf(8)
+        assertFalse(viewModel.onLeave())
+        val frame = viewModel.frame.value
+
+        assertTrue(viewModel.onReplaceRejected())
+
+        assertNull(viewModel.uiState.value.replaceAsk)
+        assertArrayEquals(byteArrayOf(9), File(directory, "juego.gba").readBytes())
+        assertArrayEquals(byteArrayOf(8), File(directory, "juego.gba.sav").readBytes())
+        viewModel.onMachineTick()
+        assertTrue(viewModel.frame.value === frame)
+    }
+
+    @Test
     fun leave_replacesTheStateOfThatFileName() {
         val directory = createTempDirectory("gba-state").toFile()
         val cores = mutableListOf<RememberingCore>()

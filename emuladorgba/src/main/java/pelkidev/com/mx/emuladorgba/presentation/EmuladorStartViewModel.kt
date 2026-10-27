@@ -262,24 +262,34 @@ class EmuladorStartViewModel(
         val ask = _uiState.value.replaceAsk ?: return false
         _uiState.update { it.copy(replaceAsk = null, replaceLabel = "") }
         if (ask == ReplaceAsk.Leave) {
-            finishLeave()
+            finishLeave(writeState = true)
             return true
         }
         writeSelectedState()
         return false
     }
 
+    fun onReplaceRejected(): Boolean {
+        val ask = _uiState.value.replaceAsk ?: return false
+        _uiState.update { it.copy(replaceAsk = null, replaceLabel = "") }
+        if (ask == ReplaceAsk.Leave) {
+            finishLeave(writeState = false)
+            return true
+        }
+        return false
+    }
+
     fun onLeave(): Boolean {
         if (askIfReplacing(ReplaceAsk.Leave)) return false
-        finishLeave()
+        finishLeave(writeState = true)
         return true
     }
 
-    private fun finishLeave() {
+    private fun finishLeave(writeState: Boolean) {
         ticker?.cancel()
         ticker = null
         paused = true
-        writeSelectedState()
+        if (writeState) writeSelectedState()
         saveCartridge()
         synchronized(coreLock) {
             machine?.close()
