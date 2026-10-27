@@ -88,6 +88,7 @@ class EmuladorStartViewModel(
                 samples = byteArrayOf(),
                 selectedSlot = 1,
                 slotNames = readSlotNames(trimmed),
+                fastForward = false,
             )
         }
         if (autoAdvance) startTicker()
@@ -213,6 +214,7 @@ class EmuladorStartViewModel(
         ticker?.cancel()
         ticker = null
         heldButtons = emptySet()
+        _uiState.update { it.copy(fastForward = false) }
         synchronized(coreLock) {
             machine?.hold(emptySet())
             machine?.pause()
