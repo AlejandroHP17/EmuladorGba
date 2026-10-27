@@ -554,6 +554,48 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun confirm_replacesOnlyTheChosenSlotAndKeepsPlaying() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 9
+        viewModel.onSaveState()
+        viewModel.onSlotSelected(2)
+        cores[0].token = 4
+        viewModel.onSaveState()
+        cores[0].token = 7
+        viewModel.onSaveState()
+
+        assertFalse(viewModel.onReplaceConfirmed())
+
+        assertNull(viewModel.uiState.value.replaceAsk)
+        assertEquals("juego.gba", viewModel.uiState.value.loadedFileName)
+        assertArrayEquals(byteArrayOf(7), File(directory, "juego.gba.2").readBytes())
+        assertArrayEquals(byteArrayOf(9), File(directory, "juego.gba").readBytes())
+    }
+
+    @Test
+    fun confirm_afterLeave_replacesTheSlotAndLeaves() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 9
+        viewModel.onSaveState()
+        cores[0].token = 4
+        assertFalse(viewModel.onLeave())
+        val frame = viewModel.frame.value
+
+        assertTrue(viewModel.onReplaceConfirmed())
+
+        assertNull(viewModel.uiState.value.replaceAsk)
+        assertArrayEquals(byteArrayOf(4), File(directory, "juego.gba").readBytes())
+        viewModel.onMachineTick()
+        assertTrue(viewModel.frame.value === frame)
+    }
+
+    @Test
     fun leave_replacesTheStateOfThatFileName() {
         val directory = createTempDirectory("gba-state").toFile()
         val cores = mutableListOf<RememberingCore>()

@@ -258,8 +258,24 @@ class EmuladorStartViewModel(
         }
     }
 
+    fun onReplaceConfirmed(): Boolean {
+        val ask = _uiState.value.replaceAsk ?: return false
+        _uiState.update { it.copy(replaceAsk = null, replaceLabel = "") }
+        if (ask == ReplaceAsk.Leave) {
+            finishLeave()
+            return true
+        }
+        writeSelectedState()
+        return false
+    }
+
     fun onLeave(): Boolean {
         if (askIfReplacing(ReplaceAsk.Leave)) return false
+        finishLeave()
+        return true
+    }
+
+    private fun finishLeave() {
         ticker?.cancel()
         ticker = null
         paused = true
@@ -270,7 +286,6 @@ class EmuladorStartViewModel(
             machine = null
         }
         _uiState.update { it.copy(samples = byteArrayOf()) }
-        return true
     }
 
     override fun onCleared() {

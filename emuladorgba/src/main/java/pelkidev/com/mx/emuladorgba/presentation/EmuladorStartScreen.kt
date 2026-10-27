@@ -170,7 +170,10 @@ fun EmuladorStartScreen(
                     onLoad = viewModel::onLoadState,
                 )
                 if (uiState.replaceAsk != null) {
-                    ReplaceQuestion(label = uiState.replaceLabel)
+                    ReplaceQuestion(
+                        label = uiState.replaceLabel,
+                        onConfirm = { if (viewModel.onReplaceConfirmed()) onExit() },
+                    )
                 }
             }
         }
@@ -178,7 +181,7 @@ fun EmuladorStartScreen(
 }
 
 @Composable
-private fun ReplaceQuestion(label: String) {
+private fun ReplaceQuestion(label: String, onConfirm: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -193,7 +196,7 @@ private fun ReplaceQuestion(label: String) {
                 textAlign = TextAlign.Center,
             )
             Button(
-                onClick = {},
+                onClick = onConfirm,
                 modifier = Modifier.padding(top = 16.dp),
             ) {
                 Text(text = stringResource(R.string.emuladorgba_replace_confirm))
