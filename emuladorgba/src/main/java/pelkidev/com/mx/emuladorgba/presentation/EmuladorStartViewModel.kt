@@ -16,6 +16,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import pelkidev.com.mx.emuladorgba.data.GbaCore
 import pelkidev.com.mx.emuladorgba.data.MgbaCore
+import pelkidev.com.mx.emuladorgba.domain.ControlLatch
 import pelkidev.com.mx.emuladorgba.domain.GbaButton
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
@@ -29,6 +30,7 @@ data class EmuladorStartUiState(
     val selectedSlot: Int = 1,
     val slotNames: List<String> = listOf("", "", ""),
     val fastForward: Boolean = false,
+    val latched: Set<GbaButton> = emptySet(),
     val replaceAsk: ReplaceAsk? = null,
     val replaceLabel: String = "",
 )
@@ -37,6 +39,7 @@ class EmuladorStartViewModel(
     private val startCore: (ByteArray) -> GbaCore = ::MgbaCore,
     private val autoAdvance: Boolean = true,
     private val stateDirectory: File? = null,
+    private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(EmuladorStartUiState())
     val uiState: StateFlow<EmuladorStartUiState> = _uiState.asStateFlow()
@@ -52,6 +55,7 @@ class EmuladorStartViewModel(
     @Volatile
     private var machine: GbaCore? = null
     private var heldButtons = emptySet<GbaButton>()
+    private var latch = ControlLatch()
     private var ticker: Job? = null
     private var paused = false
     private val tickerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -79,6 +83,7 @@ class EmuladorStartViewModel(
         }
         loadedRom = bytes
         heldButtons = emptySet()
+        latch = ControlLatch()
         paused = false
         _frame.value = next.frame()
         _uiState.update {
@@ -89,6 +94,7 @@ class EmuladorStartViewModel(
                 selectedSlot = 1,
                 slotNames = readSlotNames(trimmed),
                 fastForward = false,
+                latched = emptySet(),
             )
         }
         if (autoAdvance) startTicker()
@@ -202,10 +208,13 @@ class EmuladorStartViewModel(
 
     fun onControlChanged(button: GbaButton, held: Boolean) {
         val running = machine ?: return
-        val next = if (held) heldButtons + button else heldButtons - button
-        if (next == heldButtons) return
-        heldButtons = next
-        running.hold(next)
+        latch = if (held) latch.down(button, clock()) else latch.up(button)
+        heldButtons = if (held) heldButtons + button else heldButtons - button
+        running.hold(heldButtons + latch.latched)
+        val latched = latch.latched
+        if (_uiState.value.latched != latched) {
+            _uiState.update { it.copy(latched = latched) }
+        }
     }
 
     fun onAppStopped() {
@@ -214,7 +223,8 @@ class EmuladorStartViewModel(
         ticker?.cancel()
         ticker = null
         heldButtons = emptySet()
-        _uiState.update { it.copy(fastForward = false) }
+        latch = ControlLatch()
+        _uiState.update { it.copy(fastForward = false, latched = emptySet()) }
         synchronized(coreLock) {
             machine?.hold(emptySet())
             machine?.pause()

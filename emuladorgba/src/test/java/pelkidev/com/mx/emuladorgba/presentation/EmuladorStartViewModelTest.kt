@@ -968,6 +968,67 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun threeQuickTaps_stayHeldAfterTheFingerLifts() {
+        val clock = TestClock()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithClock(cores, clock)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        tap(viewModel, clock, GbaButton.A, 0, 100, 200)
+
+        assertEquals(setOf(GbaButton.A), cores[0].held)
+        assertEquals(setOf(GbaButton.A), viewModel.uiState.value.latched)
+    }
+
+    @Test
+    fun anotherTap_releasesTheLatchedControl() {
+        val clock = TestClock()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithClock(cores, clock)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        tap(viewModel, clock, GbaButton.A, 0, 100, 200)
+
+        clock.time = 300
+        viewModel.onControlChanged(GbaButton.A, true)
+        viewModel.onControlChanged(GbaButton.A, false)
+
+        assertEquals(emptySet<GbaButton>(), cores[0].held)
+        assertEquals(emptySet<GbaButton>(), viewModel.uiState.value.latched)
+    }
+
+    @Test
+    fun anotherGba_releasesTheLatchedControl() {
+        val clock = TestClock()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithClock(cores, clock)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        tap(viewModel, clock, GbaButton.A, 0, 100, 200)
+
+        viewModel.onFileChosen("otro.gba") { byteArrayOf(2) }
+
+        assertEquals(emptySet<GbaButton>(), cores[1].held)
+        assertEquals(emptySet<GbaButton>(), viewModel.uiState.value.latched)
+    }
+
+    @Test
+    fun leavingTheApp_releasesTheLatchedControl() {
+        val clock = TestClock()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithClock(cores, clock)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        tap(viewModel, clock, GbaButton.A, 0, 100, 200)
+
+        viewModel.onAppStopped()
+
+        assertEquals(emptySet<GbaButton>(), cores[0].held)
+        assertEquals(emptySet<GbaButton>(), viewModel.uiState.value.latched)
+
+        viewModel.onAppStarted()
+
+        assertEquals(emptySet<GbaButton>(), cores[0].held)
+        assertEquals(emptySet<GbaButton>(), viewModel.uiState.value.latched)
+    }
+
+    @Test
     fun fastForward_runsTwoFramesAndReturnsToOne() {
         val cores = mutableListOf<RememberingCore>()
         val viewModel = EmuladorStartViewModel(
@@ -1006,6 +1067,32 @@ class EmuladorStartViewModelTest {
 
         assertFalse(viewModel.uiState.value.fastForward)
         assertEquals(2, cores[1].steps)
+    }
+
+    private class TestClock {
+        var time = 0L
+    }
+
+    private fun viewModelWithClock(
+        cores: MutableList<RememberingCore>,
+        clock: TestClock,
+    ) = EmuladorStartViewModel(
+        startCore = { RememberingCore().also(cores::add) },
+        autoAdvance = false,
+        clock = { clock.time },
+    )
+
+    private fun tap(
+        viewModel: EmuladorStartViewModel,
+        clock: TestClock,
+        button: GbaButton,
+        vararg starts: Long,
+    ) {
+        for (at in starts) {
+            clock.time = at
+            viewModel.onControlChanged(button, true)
+            viewModel.onControlChanged(button, false)
+        }
     }
 
     private fun viewModelWithStates(directory: File, cores: MutableList<RememberingCore>) =
