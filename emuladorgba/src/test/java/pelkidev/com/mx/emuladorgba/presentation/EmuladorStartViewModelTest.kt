@@ -968,6 +968,24 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun threeQuickTapsOnADirection_doNotStayHeld() {
+        val clock = TestClock()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithClock(cores, clock)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+
+        clock.time = 0
+        viewModel.onControlChanged(GbaButton.UP, true)
+        assertEquals(setOf(GbaButton.UP), cores[0].held)
+
+        viewModel.onControlChanged(GbaButton.UP, false)
+        tap(viewModel, clock, GbaButton.LEFT, 0, 100, 200)
+
+        assertEquals(emptySet<GbaButton>(), cores[0].held)
+        assertEquals(emptySet<GbaButton>(), viewModel.uiState.value.latched)
+    }
+
+    @Test
     fun threeQuickTaps_stayHeldAfterTheFingerLifts() {
         val clock = TestClock()
         val cores = mutableListOf<RememberingCore>()

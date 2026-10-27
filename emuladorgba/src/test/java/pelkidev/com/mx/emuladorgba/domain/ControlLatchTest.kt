@@ -34,6 +34,21 @@ class ControlLatchTest {
     }
 
     @Test
+    fun directions_doNotLatch() {
+        for (arrow in listOf(GbaButton.UP, GbaButton.DOWN, GbaButton.LEFT, GbaButton.RIGHT)) {
+            assertFalse(taps(arrow, 0, 100, 200).latched.contains(arrow))
+        }
+    }
+
+    @Test
+    fun directionTaps_leaveAnotherLatch() {
+        val latched = taps(GbaButton.A, 0, 100, 200)
+        val after = taps(latched, GbaButton.LEFT, 300, 400, 500)
+        assertTrue(after.latched.contains(GbaButton.A))
+        assertFalse(after.latched.contains(GbaButton.LEFT))
+    }
+
+    @Test
     fun oneButton_doesNotChangeAnother() {
         val latched = taps(GbaButton.A, 0, 100, 200)
         val afterOther = latched.down(GbaButton.B, 250).up(GbaButton.B)
