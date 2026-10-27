@@ -17,6 +17,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -156,6 +157,8 @@ fun EmuladorStartScreen(
                         .statusBarsPadding()
                         .navigationBarsPadding(),
                     onChanged = viewModel::onControlChanged,
+                    onSave = viewModel::onSaveState,
+                    onLoad = viewModel::onLoadState,
                 )
             }
         }
@@ -165,9 +168,22 @@ fun EmuladorStartScreen(
 @Composable
 private fun GbaControls(
     onChanged: (GbaButton, Boolean) -> Unit,
+    onSave: () -> Unit,
+    onLoad: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.padding(8.dp)) {
+        Column(
+            modifier = Modifier.align(Alignment.TopCenter),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            StateAction(stringResource(R.string.emuladorgba_save), onSave)
+            StateAction(
+                stringResource(R.string.emuladorgba_load),
+                onLoad,
+                Modifier.padding(top = 8.dp),
+            )
+        }
         Control(
             "L",
             GbaButton.L,
@@ -223,6 +239,30 @@ private fun GbaControls(
                 style = ControlStyle.Menu,
             )
         }
+    }
+}
+
+@Composable
+private fun StateAction(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(96.dp, 40.dp)
+            .clip(RoundedCornerShape(percent = 50))
+            .background(FaceShoulder)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
