@@ -1,6 +1,8 @@
 package pelkidev.com.mx.emuladorgba.presentation
 
 import androidx.lifecycle.ViewModel
+import java.io.File
+import kotlin.io.path.createTempDirectory
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -515,6 +517,100 @@ class EmuladorStartViewModelTest {
 
         assertTrue(cores[0].closed)
         assertTrue(cores[1].closed)
+    }
+
+    @Test
+    fun save_replacesTheStateOfThatFileName() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 9
+        viewModel.onSaveState()
+        cores[0].token = 4
+        viewModel.onSaveState()
+
+        assertArrayEquals(byteArrayOf(4), File(directory, "juego.gba").readBytes())
+        assertFalse(File(directory, "otro.gba").exists())
+    }
+
+    @Test
+    fun load_withoutState_keepsTheFrame() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        val frame = viewModel.frame.value
+
+        viewModel.onLoadState()
+
+        assertTrue(viewModel.frame.value === frame)
+        assertNull(cores[0].imported)
+    }
+
+    @Test
+    fun load_doesNotApplyAnotherFile() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 7
+        viewModel.onSaveState()
+
+        viewModel.onFileChosen("otro.gba") { byteArrayOf(2) }
+        val frame = viewModel.frame.value
+        viewModel.onLoadState()
+
+        assertTrue(viewModel.frame.value === frame)
+        assertNull(cores[1].imported)
+    }
+
+    @Test
+    fun reopenedEmulator_loadsTheStateOfTheSameFile() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val firstCores = mutableListOf<RememberingCore>()
+        val first = viewModelWithStates(directory, firstCores)
+        first.onFileChosen("juego.gba") { byteArrayOf(1) }
+        firstCores[0].token = 6
+        first.onSaveState()
+
+        val secondCores = mutableListOf<RememberingCore>()
+        val second = viewModelWithStates(directory, secondCores)
+        second.onFileChosen("juego.gba") { byteArrayOf(1) }
+        second.onLoadState()
+
+        assertArrayEquals(byteArrayOf(6), secondCores[0].imported)
+        assertEquals(6, second.frame.value!!.pixel(0, 0))
+    }
+
+    private fun viewModelWithStates(directory: File, cores: MutableList<RememberingCore>) =
+        EmuladorStartViewModel(
+            startCore = { RememberingCore().also(cores::add) },
+            autoAdvance = false,
+            stateDirectory = directory,
+        )
+
+    private class RememberingCore : GbaCore {
+        var token: Byte = 1
+        var imported: ByteArray? = null
+            private set
+        private var shown: Byte = 1
+
+        override fun step() = Unit
+        override fun frame(): GbaFrame {
+            val pixels = IntArray(GbaFrame.WIDTH * GbaFrame.HEIGHT)
+            pixels[0] = shown.toInt() and 0xFF
+            return GbaFrame(pixels)
+        }
+        override fun samples(): ByteArray = byteArrayOf()
+        override fun hold(buttons: Set<GbaButton>) = Unit
+        override fun exportState(): ByteArray = byteArrayOf(token)
+        override fun importState(state: ByteArray): Boolean {
+            imported = state.copyOf()
+            shown = state.first()
+            return true
+        }
+        override fun close() = Unit
     }
 
     private fun newViewModel() = EmuladorStartViewModel(

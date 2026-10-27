@@ -1,6 +1,7 @@
 package pelkidev.com.mx.emuladorgba.presentation
 
 import androidx.lifecycle.ViewModel
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,6 +29,7 @@ data class EmuladorStartUiState(
 class EmuladorStartViewModel(
     private val startCore: (ByteArray) -> GbaCore = ::MgbaCore,
     private val autoAdvance: Boolean = true,
+    private val stateDirectory: File? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(EmuladorStartUiState())
     val uiState: StateFlow<EmuladorStartUiState> = _uiState.asStateFlow()
@@ -76,6 +78,29 @@ class EmuladorStartViewModel(
             )
         }
         if (autoAdvance) startTicker()
+    }
+
+    fun onSaveState() {
+        val name = _uiState.value.loadedFileName ?: return
+        val directory = stateDirectory ?: return
+        val bytes = synchronized(coreLock) { machine?.exportState() } ?: return
+        if (bytes.isEmpty()) return
+        directory.mkdirs()
+        stateFile(directory, name).writeBytes(bytes)
+    }
+
+    fun onLoadState() {
+        val name = _uiState.value.loadedFileName ?: return
+        val directory = stateDirectory ?: return
+        val file = stateFile(directory, name)
+        if (!file.isFile) return
+        val restored: GbaFrame
+        synchronized(coreLock) {
+            val running = machine ?: return
+            if (!running.importState(file.readBytes())) return
+            restored = running.frame()
+        }
+        _frame.value = restored
     }
 
     fun onControlChanged(button: GbaButton, held: Boolean) {
@@ -162,5 +187,10 @@ class EmuladorStartViewModel(
 
     private companion object {
         const val FRAME_NANOS = 16_742_706L
+
+        fun stateFile(directory: File, name: String): File {
+            val safe = name.replace("/", "_").replace("\\", "_")
+            return File(directory, safe)
+        }
     }
 }

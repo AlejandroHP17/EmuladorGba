@@ -1,6 +1,7 @@
 package pelkidev.com.mx.emuladorgba.presentation
 
 import android.app.Activity
+import java.io.File
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
@@ -60,10 +61,20 @@ import pelkidev.com.mx.emuladorgba.R
 import pelkidev.com.mx.emuladorgba.domain.GbaButton
 
 @Composable
+private fun rememberEmuladorStartViewModel(): EmuladorStartViewModel {
+    val context = LocalContext.current
+    return viewModel {
+        EmuladorStartViewModel(
+            stateDirectory = File(context.applicationContext.filesDir, "emuladorgba-states"),
+        )
+    }
+}
+
+@Composable
 fun EmuladorStartScreen(
     onExit: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: EmuladorStartViewModel = viewModel(),
+    viewModel: EmuladorStartViewModel = rememberEmuladorStartViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val frame = viewModel.frame.collectAsStateWithLifecycle()
