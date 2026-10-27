@@ -21,6 +21,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,7 +44,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -231,67 +235,33 @@ private fun GbaControls(
     onFastForward: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.padding(8.dp)) {
-        Column(
-            modifier = Modifier.align(Alignment.TopCenter),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Row {
-                SlotChoice(1, slotNames.getOrElse(0) { "" }, selectedSlot, onSelectSlot, onSlotNamed)
-                SlotChoice(
-                    2,
-                    slotNames.getOrElse(1) { "" },
-                    selectedSlot,
-                    onSelectSlot,
-                    onSlotNamed,
-                    Modifier.padding(start = 8.dp),
+    var menuOpen by remember { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        Box(Modifier.fillMaxSize().padding(8.dp)) {
+            Column(
+                modifier = Modifier.align(Alignment.BottomStart),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Control(
+                    "L",
+                    GbaButton.L,
+                    onChanged,
+                    Modifier.padding(bottom = ShoulderGap),
+                    style = ControlStyle.Face,
+                    fill = FaceShoulder,
                 )
-                SlotChoice(
-                    3,
-                    slotNames.getOrElse(2) { "" },
-                    selectedSlot,
-                    onSelectSlot,
-                    onSlotNamed,
-                    Modifier.padding(start = 8.dp),
-                )
+                Dpad(onChanged)
             }
-            StateAction(
-                stringResource(R.string.emuladorgba_save),
-                onSave,
-                Modifier.padding(top = 8.dp),
+            Control(
+                "R",
+                GbaButton.R,
+                onChanged,
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = DpadHeight + ShoulderGap),
+                style = ControlStyle.Face,
+                fill = FaceShoulder,
             )
-            StateAction(
-                stringResource(R.string.emuladorgba_load),
-                onLoad,
-                Modifier.padding(top = 8.dp),
-            )
-            FastForwardHold(
-                stringResource(R.string.emuladorgba_fast_forward),
-                fastForward,
-                onFastForward,
-                Modifier.padding(top = 8.dp),
-            )
-        }
-        Control(
-            "L",
-            GbaButton.L,
-            onChanged,
-            Modifier.align(Alignment.TopStart),
-            style = ControlStyle.Face,
-            fill = FaceShoulder,
-        )
-        Control(
-            "R",
-            GbaButton.R,
-            onChanged,
-            Modifier.align(Alignment.TopEnd),
-            style = ControlStyle.Face,
-            fill = FaceShoulder,
-        )
-        Dpad(
-            onChanged,
-            Modifier.align(Alignment.BottomStart),
-        )
         Row(
             modifier = Modifier.align(Alignment.BottomEnd),
             verticalAlignment = Alignment.Top,
@@ -327,6 +297,100 @@ private fun GbaControls(
                 style = ControlStyle.Menu,
             )
         }
+        if (menuOpen) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color(0x66000000))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { menuOpen = false },
+            )
+        }
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp),
+            horizontalAlignment = Alignment.End,
+        ) {
+            StateAction(
+                label = stringResource(R.string.emuladorgba_menu),
+                onClick = { menuOpen = !menuOpen },
+                fill = if (menuOpen) FaceA else FaceShoulder,
+            )
+            if (menuOpen) {
+                GameMenu(
+                    selectedSlot = selectedSlot,
+                    slotNames = slotNames,
+                    onSelectSlot = onSelectSlot,
+                    onSlotNamed = onSlotNamed,
+                    onSave = onSave,
+                    onLoad = onLoad,
+                    fastForward = fastForward,
+                    onFastForward = onFastForward,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        }
+        }
+    }
+}
+
+@Composable
+private fun GameMenu(
+    selectedSlot: Int,
+    slotNames: List<String>,
+    onSelectSlot: (Int) -> Unit,
+    onSlotNamed: (String) -> Unit,
+    onSave: () -> Unit,
+    onLoad: () -> Unit,
+    fastForward: Boolean,
+    onFastForward: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xF0181C24))
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row {
+            SlotChoice(1, slotNames.getOrElse(0) { "" }, selectedSlot, onSelectSlot, onSlotNamed)
+            SlotChoice(
+                2,
+                slotNames.getOrElse(1) { "" },
+                selectedSlot,
+                onSelectSlot,
+                onSlotNamed,
+                Modifier.padding(start = 8.dp),
+            )
+            SlotChoice(
+                3,
+                slotNames.getOrElse(2) { "" },
+                selectedSlot,
+                onSelectSlot,
+                onSlotNamed,
+                Modifier.padding(start = 8.dp),
+            )
+        }
+        StateAction(
+            stringResource(R.string.emuladorgba_save),
+            onSave,
+            Modifier.padding(top = 8.dp),
+        )
+        StateAction(
+            stringResource(R.string.emuladorgba_load),
+            onLoad,
+            Modifier.padding(top = 8.dp),
+        )
+        FastForwardHold(
+            stringResource(R.string.emuladorgba_fast_forward),
+            fastForward,
+            onFastForward,
+            Modifier.padding(top = 8.dp),
+        )
     }
 }
 
@@ -442,12 +506,13 @@ private fun StateAction(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    fill: Color = FaceShoulder,
 ) {
     Box(
         modifier = modifier
             .size(96.dp, 40.dp)
             .clip(RoundedCornerShape(percent = 50))
-            .background(FaceShoulder)
+            .background(fill)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -469,20 +534,24 @@ private fun Dpad(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(PadGap),
     ) {
-        Control("↑", GbaButton.UP, onChanged, style = ControlStyle.Face, fill = FacePad)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Control("←", GbaButton.LEFT, onChanged, style = ControlStyle.Face, fill = FacePad)
-            Box(modifier = Modifier.size(12.dp))
-            Control("→", GbaButton.RIGHT, onChanged, style = ControlStyle.Face, fill = FacePad)
+        Control("▲", GbaButton.UP, onChanged, style = ControlStyle.Pad, fill = FacePad)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(PadSideGap),
+        ) {
+            Control("◀", GbaButton.LEFT, onChanged, style = ControlStyle.Pad, fill = FacePad)
+            Control("▶", GbaButton.RIGHT, onChanged, style = ControlStyle.Pad, fill = FacePad)
         }
-        Control("↓", GbaButton.DOWN, onChanged, style = ControlStyle.Face, fill = FacePad)
+        Control("▼", GbaButton.DOWN, onChanged, style = ControlStyle.Pad, fill = FacePad)
     }
 }
 
 private enum class ControlStyle {
     Face,
     Menu,
+    Pad,
 }
 
 @Composable
@@ -536,7 +605,14 @@ private data class ControlLook(
 private fun ControlStyle.look(): ControlLook = when (this) {
     ControlStyle.Face -> ControlLook(72.dp, 72.dp, CircleShape, 22.sp)
     ControlStyle.Menu -> ControlLook(88.dp, 40.dp, RoundedCornerShape(percent = 50), 13.sp)
+    ControlStyle.Pad -> ControlLook(PadButton, PadButton, RoundedCornerShape(14.dp), 18.sp)
 }
+
+private val PadButton = 52.dp
+private val PadGap = 6.dp
+private val PadSideGap = 28.dp
+private val ShoulderGap = 8.dp
+private val DpadHeight = PadButton * 3 + PadGap * 2
 
 private val PadFill = Color.White.copy(alpha = 0.28f)
 private val FaceA = Color(0xCC3D8BFF)
