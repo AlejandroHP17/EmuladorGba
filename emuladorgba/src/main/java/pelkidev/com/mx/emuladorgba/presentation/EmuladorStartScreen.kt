@@ -26,8 +26,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,8 +51,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -158,7 +164,9 @@ fun EmuladorStartScreen(
                         .navigationBarsPadding(),
                     onChanged = viewModel::onControlChanged,
                     selectedSlot = uiState.selectedSlot,
+                    slotNames = uiState.slotNames,
                     onSelectSlot = viewModel::onSlotSelected,
+                    onSlotNamed = viewModel::onSlotNamed,
                     onSave = viewModel::onSaveState,
                     onLoad = viewModel::onLoadState,
                 )
@@ -171,7 +179,9 @@ fun EmuladorStartScreen(
 private fun GbaControls(
     onChanged: (GbaButton, Boolean) -> Unit,
     selectedSlot: Int,
+    slotNames: List<String>,
     onSelectSlot: (Int) -> Unit,
+    onSlotNamed: (String) -> Unit,
     onSave: () -> Unit,
     onLoad: () -> Unit,
     modifier: Modifier = Modifier,
@@ -182,9 +192,23 @@ private fun GbaControls(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row {
-                SlotChoice(1, selectedSlot, onSelectSlot)
-                SlotChoice(2, selectedSlot, onSelectSlot, Modifier.padding(start = 8.dp))
-                SlotChoice(3, selectedSlot, onSelectSlot, Modifier.padding(start = 8.dp))
+                SlotChoice(1, slotNames.getOrElse(0) { "" }, selectedSlot, onSelectSlot, onSlotNamed)
+                SlotChoice(
+                    2,
+                    slotNames.getOrElse(1) { "" },
+                    selectedSlot,
+                    onSelectSlot,
+                    onSlotNamed,
+                    Modifier.padding(start = 8.dp),
+                )
+                SlotChoice(
+                    3,
+                    slotNames.getOrElse(2) { "" },
+                    selectedSlot,
+                    onSelectSlot,
+                    onSlotNamed,
+                    Modifier.padding(start = 8.dp),
+                )
             }
             StateAction(
                 stringResource(R.string.emuladorgba_save),
@@ -258,25 +282,70 @@ private fun GbaControls(
 @Composable
 private fun SlotChoice(
     slot: Int,
+    name: String,
     selectedSlot: Int,
     onSelectSlot: (Int) -> Unit,
+    onSlotNamed: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(if (slot == selectedSlot) FaceA else FaceShoulder)
-            .clickable { onSelectSlot(slot) },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = slot.toString(),
+    val selected = slot == selectedSlot
+    val label = if (name.isBlank()) slot.toString() else name
+    val shape = RoundedCornerShape(percent = 50)
+    if (!selected) {
+        Box(
+            modifier = modifier
+                .height(40.dp)
+                .widthIn(min = 40.dp, max = 96.dp)
+                .clip(shape)
+                .background(FaceShoulder)
+                .clickable { onSelectSlot(slot) }
+                .padding(horizontal = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = label,
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        return
+    }
+    BasicTextField(
+        value = name,
+        onValueChange = onSlotNamed,
+        singleLine = true,
+        textStyle = TextStyle(
             color = Color.White,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-        )
-    }
+            textAlign = TextAlign.Center,
+        ),
+        modifier = modifier,
+        decorationBox = { inner ->
+            Box(
+                modifier = Modifier
+                    .height(40.dp)
+                    .width(160.dp)
+                    .clip(shape)
+                    .background(FaceA)
+                    .padding(horizontal = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (name.isBlank()) {
+                    Text(
+                        text = slot.toString(),
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                inner()
+            }
+        },
+    )
 }
 
 @Composable

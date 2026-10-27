@@ -25,6 +25,7 @@ data class EmuladorStartUiState(
     val showInvalidFileMessage: Boolean = false,
     val samples: ByteArray = byteArrayOf(),
     val selectedSlot: Int = 1,
+    val slotNames: List<String> = listOf("", "", ""),
 )
 
 class EmuladorStartViewModel(
@@ -81,6 +82,7 @@ class EmuladorStartViewModel(
                 showInvalidFileMessage = false,
                 samples = byteArrayOf(),
                 selectedSlot = 1,
+                slotNames = listOf("", "", ""),
             )
         }
         if (autoAdvance) startTicker()
@@ -89,6 +91,18 @@ class EmuladorStartViewModel(
     fun onSlotSelected(slot: Int) {
         if (slot !in 1..3) return
         _uiState.update { it.copy(selectedSlot = slot) }
+    }
+
+    fun onSlotNamed(name: String) {
+        if (_uiState.value.loadedFileName == null) return
+        val slot = _uiState.value.selectedSlot
+        val limited = name.take(SLOT_NAME_LIMIT)
+        _uiState.update { state ->
+            val names = state.slotNames.toMutableList()
+            while (names.size < 3) names.add("")
+            names[slot - 1] = limited
+            state.copy(slotNames = names)
+        }
     }
 
     fun onSaveState() {
@@ -219,6 +233,7 @@ class EmuladorStartViewModel(
 
     private companion object {
         const val FRAME_NANOS = 16_742_706L
+        const val SLOT_NAME_LIMIT = 50
 
         fun stateFile(directory: File, name: String, slot: Int = 1): File {
             val safe = name.replace("/", "_").replace("\\", "_")
