@@ -52,8 +52,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -174,6 +176,7 @@ fun EmuladorStartScreen(
                     onLoad = viewModel::onLoadState,
                     fastForward = uiState.fastForward,
                     onFastForward = viewModel::onFastForwardChanged,
+                    latched = uiState.latched,
                 )
                 if (uiState.replaceAsk != null) {
                     ReplaceQuestion(
@@ -233,6 +236,7 @@ private fun GbaControls(
     onLoad: () -> Unit,
     fastForward: Boolean,
     onFastForward: (Boolean) -> Unit,
+    latched: Set<GbaButton>,
     modifier: Modifier = Modifier,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -249,8 +253,9 @@ private fun GbaControls(
                     Modifier.padding(bottom = ShoulderGap),
                     style = ControlStyle.Face,
                     fill = FaceShoulder,
+                    latched = latched,
                 )
-                Dpad(onChanged)
+                Dpad(onChanged, latched)
             }
             Control(
                 "R",
@@ -261,6 +266,7 @@ private fun GbaControls(
                     .padding(bottom = DpadHeight + ShoulderGap),
                 style = ControlStyle.Face,
                 fill = FaceShoulder,
+                latched = latched,
             )
         Row(
             modifier = Modifier.align(Alignment.BottomEnd),
@@ -273,6 +279,7 @@ private fun GbaControls(
                 Modifier.padding(top = 36.dp, end = 12.dp),
                 style = ControlStyle.Face,
                 fill = FaceB,
+                latched = latched,
             )
             Control(
                 "A",
@@ -280,6 +287,7 @@ private fun GbaControls(
                 onChanged,
                 style = ControlStyle.Face,
                 fill = FaceA,
+                latched = latched,
             )
         }
         Row(modifier = Modifier.align(Alignment.BottomCenter)) {
@@ -289,12 +297,14 @@ private fun GbaControls(
                 onChanged,
                 Modifier.padding(end = 12.dp),
                 style = ControlStyle.Menu,
+                latched = latched,
             )
             Control(
                 "Start",
                 GbaButton.START,
                 onChanged,
                 style = ControlStyle.Menu,
+                latched = latched,
             )
         }
         if (menuOpen) {
@@ -529,6 +539,7 @@ private fun StateAction(
 @Composable
 private fun Dpad(
     onChanged: (GbaButton, Boolean) -> Unit,
+    latched: Set<GbaButton>,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -536,15 +547,15 @@ private fun Dpad(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(PadGap),
     ) {
-        Control("▲", GbaButton.UP, onChanged, style = ControlStyle.Pad, fill = FacePad)
+        Control("▲", GbaButton.UP, onChanged, style = ControlStyle.Pad, fill = FacePad, latched = latched)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(PadSideGap),
         ) {
-            Control("◀", GbaButton.LEFT, onChanged, style = ControlStyle.Pad, fill = FacePad)
-            Control("▶", GbaButton.RIGHT, onChanged, style = ControlStyle.Pad, fill = FacePad)
+            Control("◀", GbaButton.LEFT, onChanged, style = ControlStyle.Pad, fill = FacePad, latched = latched)
+            Control("▶", GbaButton.RIGHT, onChanged, style = ControlStyle.Pad, fill = FacePad, latched = latched)
         }
-        Control("▼", GbaButton.DOWN, onChanged, style = ControlStyle.Pad, fill = FacePad)
+        Control("▼", GbaButton.DOWN, onChanged, style = ControlStyle.Pad, fill = FacePad, latched = latched)
     }
 }
 
@@ -562,7 +573,11 @@ private fun Control(
     modifier: Modifier = Modifier,
     style: ControlStyle = ControlStyle.Face,
     fill: Color = PadFill,
+    latched: Set<GbaButton> = emptySet(),
 ) {
+    var fingerDown by remember(button) { mutableStateOf(false) }
+    val pressed = fingerDown || button in latched
+    val sink = with(LocalDensity.current) { 2.dp.toPx() }
     DisposableEffect(button) {
         onDispose { onChanged(button, false) }
     }
@@ -570,16 +585,24 @@ private fun Control(
     Box(
         modifier = modifier
             .size(look.width, look.height)
+            .graphicsLayer {
+                val scale = if (pressed) 0.94f else 1f
+                scaleX = scale
+                scaleY = scale
+                translationY = if (pressed) sink else 0f
+            }
             .clip(look.shape)
-            .background(fill)
+            .background(if (pressed) fill.pressed() else fill)
             .pointerInput(button) {
                 awaitEachGesture {
                     awaitFirstDown()
+                    fingerDown = true
                     onChanged(button, true)
                     try {
                         waitForUpOrCancellation()
                     } finally {
                         onChanged(button, false)
+                        fingerDown = false
                     }
                 }
             },
@@ -619,6 +642,13 @@ private val FaceA = Color(0xCC3D8BFF)
 private val FaceB = Color(0xCCFF5A5A)
 private val FaceShoulder = Color(0xCC6E7A90)
 private val FacePad = Color(0xE65A6478)
+
+private fun Color.pressed(): Color = Color(
+    red = red * 0.62f,
+    green = green * 0.62f,
+    blue = blue * 0.62f,
+    alpha = alpha,
+)
 
 @Composable
 private fun GbaSpeaker(samples: ByteArray) {
