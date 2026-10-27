@@ -157,6 +157,8 @@ fun EmuladorStartScreen(
                         .statusBarsPadding()
                         .navigationBarsPadding(),
                     onChanged = viewModel::onControlChanged,
+                    selectedSlot = uiState.selectedSlot,
+                    onSelectSlot = viewModel::onSlotSelected,
                     onSave = viewModel::onSaveState,
                     onLoad = viewModel::onLoadState,
                 )
@@ -168,6 +170,8 @@ fun EmuladorStartScreen(
 @Composable
 private fun GbaControls(
     onChanged: (GbaButton, Boolean) -> Unit,
+    selectedSlot: Int,
+    onSelectSlot: (Int) -> Unit,
     onSave: () -> Unit,
     onLoad: () -> Unit,
     modifier: Modifier = Modifier,
@@ -177,7 +181,16 @@ private fun GbaControls(
             modifier = Modifier.align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            StateAction(stringResource(R.string.emuladorgba_save), onSave)
+            Row {
+                SlotChoice(1, selectedSlot, onSelectSlot)
+                SlotChoice(2, selectedSlot, onSelectSlot, Modifier.padding(start = 8.dp))
+                SlotChoice(3, selectedSlot, onSelectSlot, Modifier.padding(start = 8.dp))
+            }
+            StateAction(
+                stringResource(R.string.emuladorgba_save),
+                onSave,
+                Modifier.padding(top = 8.dp),
+            )
             StateAction(
                 stringResource(R.string.emuladorgba_load),
                 onLoad,
@@ -239,6 +252,30 @@ private fun GbaControls(
                 style = ControlStyle.Menu,
             )
         }
+    }
+}
+
+@Composable
+private fun SlotChoice(
+    slot: Int,
+    selectedSlot: Int,
+    onSelectSlot: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(if (slot == selectedSlot) FaceA else FaceShoulder)
+            .clickable { onSelectSlot(slot) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = slot.toString(),
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 

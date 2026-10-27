@@ -24,6 +24,7 @@ data class EmuladorStartUiState(
     val loadedFileName: String? = null,
     val showInvalidFileMessage: Boolean = false,
     val samples: ByteArray = byteArrayOf(),
+    val selectedSlot: Int = 1,
 )
 
 class EmuladorStartViewModel(
@@ -79,18 +80,25 @@ class EmuladorStartViewModel(
                 loadedFileName = trimmed,
                 showInvalidFileMessage = false,
                 samples = byteArrayOf(),
+                selectedSlot = 1,
             )
         }
         if (autoAdvance) startTicker()
     }
 
+    fun onSlotSelected(slot: Int) {
+        if (slot !in 1..3) return
+        _uiState.update { it.copy(selectedSlot = slot) }
+    }
+
     fun onSaveState() {
         val name = _uiState.value.loadedFileName ?: return
         val directory = stateDirectory ?: return
+        val slot = _uiState.value.selectedSlot
         val bytes = synchronized(coreLock) { machine?.exportState() } ?: return
         if (bytes.isEmpty()) return
         directory.mkdirs()
-        stateFile(directory, name).writeBytes(bytes)
+        stateFile(directory, name, slot).writeBytes(bytes)
     }
 
     private fun saveCartridge() {
@@ -114,7 +122,7 @@ class EmuladorStartViewModel(
     fun onLoadState() {
         val name = _uiState.value.loadedFileName ?: return
         val directory = stateDirectory ?: return
-        val file = stateFile(directory, name)
+        val file = stateFile(directory, name, _uiState.value.selectedSlot)
         if (!file.isFile) return
         val restored: GbaFrame
         synchronized(coreLock) {
@@ -212,9 +220,10 @@ class EmuladorStartViewModel(
     private companion object {
         const val FRAME_NANOS = 16_742_706L
 
-        fun stateFile(directory: File, name: String): File {
+        fun stateFile(directory: File, name: String, slot: Int = 1): File {
             val safe = name.replace("/", "_").replace("\\", "_")
-            return File(directory, safe)
+            val fileName = if (slot == 1) safe else "$safe.$slot"
+            return File(directory, fileName)
         }
 
         fun cartridgeFile(directory: File, name: String): File {
