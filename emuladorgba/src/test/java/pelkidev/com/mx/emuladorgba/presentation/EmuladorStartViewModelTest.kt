@@ -535,6 +535,34 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun leave_replacesTheStateOfThatFileName() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 9
+        viewModel.onSaveState()
+        cores[0].token = 4
+
+        viewModel.onLeave()
+
+        assertArrayEquals(byteArrayOf(4), File(directory, "juego.gba").readBytes())
+    }
+
+    @Test
+    fun leave_withoutAFile_doesNotCreateState() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val kept = File(directory, "juego.gba")
+        kept.writeBytes(byteArrayOf(3))
+        val viewModel = viewModelWithStates(directory, mutableListOf())
+
+        viewModel.onLeave()
+
+        assertArrayEquals(byteArrayOf(3), kept.readBytes())
+        assertEquals(listOf("juego.gba"), directory.list()?.toList())
+    }
+
+    @Test
     fun load_withoutState_keepsTheFrame() {
         val directory = createTempDirectory("gba-state").toFile()
         val cores = mutableListOf<RememberingCore>()
