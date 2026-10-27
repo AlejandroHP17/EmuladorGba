@@ -108,8 +108,7 @@ fun EmuladorStartScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     BackHandler {
-        viewModel.onLeave()
-        onExit()
+        if (viewModel.onLeave()) onExit()
     }
     GbaSpeaker(uiState.samples)
     val pickGbaFile = rememberLauncherForActivityResult(
@@ -170,6 +169,40 @@ fun EmuladorStartScreen(
                     onSave = viewModel::onSaveState,
                     onLoad = viewModel::onLoadState,
                 )
+                if (uiState.replaceAsk != null) {
+                    ReplaceQuestion(label = uiState.replaceLabel)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReplaceQuestion(label: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xCC000000)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = stringResource(R.string.emuladorgba_replace_slot, label),
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+            )
+            Button(
+                onClick = {},
+                modifier = Modifier.padding(top = 16.dp),
+            ) {
+                Text(text = stringResource(R.string.emuladorgba_replace_confirm))
+            }
+            Button(
+                onClick = {},
+                modifier = Modifier.padding(top = 8.dp),
+            ) {
+                Text(text = stringResource(R.string.emuladorgba_replace_reject))
             }
         }
     }

@@ -3,4 +3,7 @@
     <string name="emuladorgba_save">Guardar</string>
     <string name="emuladorgba_load">Cargar</string>
     <string name="emuladorgba_invalid_file">Elige un archivo .gba</string>
+    <string name="emuladorgba_replace_slot">¿Sustituir %1$s?</string>
+    <string name="emuladorgba_replace_confirm">Confirmar</string>
+    <string name="emuladorgba_replace_reject">Rechazar</string>
 </resources>

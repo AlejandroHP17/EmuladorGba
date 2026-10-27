@@ -20,12 +20,16 @@ import pelkidev.com.mx.emuladorgba.domain.GbaButton
 import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 import pelkidev.com.mx.emuladorgba.domain.isGbaFileName
 
+enum class ReplaceAsk { Save, Leave }
+
 data class EmuladorStartUiState(
     val loadedFileName: String? = null,
     val showInvalidFileMessage: Boolean = false,
     val samples: ByteArray = byteArrayOf(),
     val selectedSlot: Int = 1,
     val slotNames: List<String> = listOf("", "", ""),
+    val replaceAsk: ReplaceAsk? = null,
+    val replaceLabel: String = "",
 )
 
 class EmuladorStartViewModel(
@@ -126,6 +130,11 @@ class EmuladorStartViewModel(
     }
 
     fun onSaveState() {
+        if (askIfReplacing(ReplaceAsk.Save)) return
+        writeSelectedState()
+    }
+
+    private fun writeSelectedState() {
         val name = _uiState.value.loadedFileName ?: return
         val directory = stateDirectory ?: return
         val slot = _uiState.value.selectedSlot
@@ -133,6 +142,23 @@ class EmuladorStartViewModel(
         if (bytes.isEmpty()) return
         directory.mkdirs()
         stateFile(directory, name, slot).writeBytes(bytes)
+    }
+
+    private fun askIfReplacing(ask: ReplaceAsk): Boolean {
+        if (_uiState.value.replaceAsk != null) return true
+        if (!slotHasState()) return false
+        val slot = _uiState.value.selectedSlot
+        val raw = _uiState.value.slotNames.getOrElse(slot - 1) { "" }.trim()
+        _uiState.update {
+            it.copy(replaceAsk = ask, replaceLabel = raw.ifBlank { slot.toString() })
+        }
+        return true
+    }
+
+    private fun slotHasState(): Boolean {
+        val name = _uiState.value.loadedFileName ?: return false
+        val directory = stateDirectory ?: return false
+        return stateFile(directory, name, _uiState.value.selectedSlot).isFile
     }
 
     private fun saveCartridge() {
@@ -232,17 +258,19 @@ class EmuladorStartViewModel(
         }
     }
 
-    fun onLeave() {
+    fun onLeave(): Boolean {
+        if (askIfReplacing(ReplaceAsk.Leave)) return false
         ticker?.cancel()
         ticker = null
         paused = true
-        onSaveState()
+        writeSelectedState()
         saveCartridge()
         synchronized(coreLock) {
             machine?.close()
             machine = null
         }
         _uiState.update { it.copy(samples = byteArrayOf()) }
+        return true
     }
 
     override fun onCleared() {
