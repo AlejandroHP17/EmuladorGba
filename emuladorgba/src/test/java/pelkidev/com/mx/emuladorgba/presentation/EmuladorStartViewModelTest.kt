@@ -537,6 +537,27 @@ class EmuladorStartViewModelTest {
     }
 
     @Test
+    fun emptySlot_savesOnSaveAndLeaveWithoutAsking() {
+        val directory = createTempDirectory("gba-state").toFile()
+        val cores = mutableListOf<RememberingCore>()
+        val viewModel = viewModelWithStates(directory, cores)
+        viewModel.onFileChosen("juego.gba") { byteArrayOf(1) }
+        cores[0].token = 2
+        viewModel.onSaveState()
+
+        assertNull(viewModel.uiState.value.replaceAsk)
+        assertArrayEquals(byteArrayOf(2), File(directory, "juego.gba").readBytes())
+
+        viewModel.onSlotSelected(3)
+        cores[0].token = 5
+        assertTrue(viewModel.onLeave())
+
+        assertNull(viewModel.uiState.value.replaceAsk)
+        assertArrayEquals(byteArrayOf(5), File(directory, "juego.gba.3").readBytes())
+        assertArrayEquals(byteArrayOf(2), File(directory, "juego.gba").readBytes())
+    }
+
+    @Test
     fun save_asksWithTheSlotName() {
         val directory = createTempDirectory("gba-state").toFile()
         val cores = mutableListOf<RememberingCore>()
