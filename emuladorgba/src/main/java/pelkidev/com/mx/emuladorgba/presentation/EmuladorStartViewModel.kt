@@ -172,6 +172,7 @@ class EmuladorStartViewModel(
         ticker?.cancel()
         ticker = null
         paused = true
+        onSaveState()
         synchronized(coreLock) {
             machine?.close()
             machine = null
