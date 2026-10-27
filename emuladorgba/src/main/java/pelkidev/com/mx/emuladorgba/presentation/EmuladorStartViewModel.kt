@@ -233,9 +233,15 @@ class EmuladorStartViewModel(
         val running: GbaCore
         val next: GbaFrame
         val heard: ByteArray
+        val fast = _uiState.value.fastForward
         synchronized(coreLock) {
             running = machine ?: return
-            running.step()
+            if (fast) {
+                running.fastStep()
+                running.fastStep()
+            } else {
+                running.step()
+            }
             next = running.frame()
             heard = running.samples()
         }

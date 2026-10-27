@@ -8,6 +8,7 @@ import pelkidev.com.mx.emuladorgba.domain.GbaFrame
 
 interface GbaCore {
     fun step()
+    fun fastStep() { step() }
     fun frame(): GbaFrame
     fun samples(): ByteArray
     fun hold(buttons: Set<GbaButton>)
@@ -34,21 +35,26 @@ class MgbaCore(rom: ByteArray) : GbaCore {
         check(handle != 0L) { "mGBA no pudo cargar el ROM" }
     }
 
-    override fun step() {
+    override fun step() = runFrame(blocking = true)
+
+    override fun fastStep() = runFrame(blocking = false)
+
+    private fun runFrame(blocking: Boolean) {
         if (handle == 0L) return
         produced = nativeRunFrame(handle, pixels, keys, pcm)
-        playProduced()
+        playProduced(blocking)
     }
 
     override fun frame(): GbaFrame = GbaFrame(pixels)
 
     override fun samples(): ByteArray = byteArrayOf()
 
-    private fun playProduced() {
+    private fun playProduced(blocking: Boolean) {
         val track = track ?: return
         if (produced <= 0) return
         if (track.playState != AudioTrack.PLAYSTATE_PLAYING) track.play()
-        track.write(pcm, 0, produced * 2, AudioTrack.WRITE_BLOCKING)
+        val mode = if (blocking) AudioTrack.WRITE_BLOCKING else AudioTrack.WRITE_NON_BLOCKING
+        track.write(pcm, 0, produced * 2, mode)
     }
 
     override fun pause() {
